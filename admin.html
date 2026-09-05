@@ -51,6 +51,7 @@
         <nav class="admin-tabs" aria-label="אזורי מערכת הניהול">
           <button class="admin-tab active" type="button" data-admin-view="content">תוכן האתר</button>
           <button class="admin-tab" type="button" data-admin-view="crm">פניות, הזמנות ומשימות</button>
+          <button class="admin-tab" type="button" data-admin-view="crm" data-invitation-jump>הזמנות דיגיטליות</button>
           <button class="admin-tab" type="button" data-admin-view="analytics">נתונים</button>
         </nav>
 
@@ -207,7 +208,7 @@
             </section>
           </aside>
           </div>
-          <section class="panel invitation-admin-panel">
+          <section class="panel invitation-admin-panel" id="digital-invitations">
             <div class="panel-head"><div><span class="eyebrow">הזמנות דיגיטליות</span><h2>אירועים ואישורי הגעה</h2></div><button class="btn" id="create-invitation-code" type="button">יצירת קוד ללקוח</button></div>
             <div class="invitation-access-result" id="invitation-access-result" hidden></div>
             <div class="invitation-admin-stats" id="invitation-admin-stats"></div>
@@ -285,6 +286,6 @@
   </dialog>
 
   <div class="toast" id="admin-toast" role="status"></div>
-  <script type="module" src="assets/admin.js?v=13"></script>
+  <script type="module" src="assets/admin.js?v=14"></script>
 </body>
 </html>

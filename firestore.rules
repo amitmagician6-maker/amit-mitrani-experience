@@ -112,12 +112,14 @@ service cloud.firestore {
       && request.resource.data.photoData is string
       && request.resource.data.photoData.size() <= 430000
       && request.resource.data.status == 'active'
-      && request.resource.data.accessCodeId is string
-      && request.resource.data.accessCodeId.size() == 64
-      && get(/databases/$(database)/documents/invitationAccess/$(request.resource.data.accessCodeId)).data.active == true
-      && get(/databases/$(database)/documents/invitationAccess/$(request.resource.data.accessCodeId)).data.used == false
-      && getAfter(/databases/$(database)/documents/invitationAccess/$(request.resource.data.accessCodeId)).data.used == true
-      && getAfter(/databases/$(database)/documents/invitationAccess/$(request.resource.data.accessCodeId)).data.invitationId == invitationId
+      && (isAdmin() || (
+        request.resource.data.accessCodeId is string
+        && request.resource.data.accessCodeId.size() == 64
+        && get(/databases/$(database)/documents/invitationAccess/$(request.resource.data.accessCodeId)).data.active == true
+        && get(/databases/$(database)/documents/invitationAccess/$(request.resource.data.accessCodeId)).data.used == false
+        && getAfter(/databases/$(database)/documents/invitationAccess/$(request.resource.data.accessCodeId)).data.used == true
+        && getAfter(/databases/$(database)/documents/invitationAccess/$(request.resource.data.accessCodeId)).data.invitationId == invitationId
+      ))
       && request.resource.data.expiresAt is timestamp
       && request.resource.data.expiresAt > request.time
       && request.resource.data.expiresAt < request.time + duration.value(400, 'd')

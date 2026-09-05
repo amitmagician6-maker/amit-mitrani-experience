@@ -7,7 +7,7 @@
   <meta name="description" content="יוצרים בחינם הזמנה דיגיטלית אישית לאירוע, משתפים בוואטסאפ ומרכזים אישורי הגעה.">
   <meta name="robots" content="noindex,nofollow">
   <link rel="canonical" href="https://amitgic.co.il/digital-invitation.html">
-  <link rel="stylesheet" href="assets/invitation.css?v=1">
+  <link rel="stylesheet" href="assets/invitation.css?v=2">
 </head>
 <body><!-- Google Tag Manager (noscript) --><noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-M7H725PC" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript><!-- End Google Tag Manager (noscript) -->
   <header class="topbar"><a class="brand" href="./">עמית <span>מיטרני</span></a><a class="back" href="shows-for-kids.html">למופעים לילדים</a></header>
@@ -16,9 +16,10 @@
 
     <section class="builder" id="creator-view">
       <form class="form-card" id="invitation-form">
-        <div class="step"><b>✓</b><span>גישה ללקוחות</span></div>
+        <div id="access-gate"><div class="step"><b>✓</b><span>גישה ללקוחות</span></div>
         <label>קוד גישה שקיבלתם מעמית<input name="accessCode" required maxlength="20" autocomplete="one-time-code" placeholder="לדוגמה: AM-123456"></label>
-        <small class="privacy">הקוד אישי ותקף ליצירת הזמנה אחת בלבד.</small>
+        <small class="privacy">הקוד אישי ותקף ליצירת הזמנה אחת בלבד.</small></div>
+        <p class="admin-access" id="admin-access" hidden>מחובר כמנהל — אפשר ליצור הזמנה ללא קוד.</p>
         <div class="step"><b>1</b><span>פרטי האירוע</span></div>
         <label>שם החוגג/ת או האירוע<input name="name" required maxlength="40" placeholder="לדוגמה: יום ההולדת של נועה"></label>
         <div class="two"><label>תאריך<input name="eventDate" type="date" required></label><label>שעה<input name="eventTime" type="time" required value="17:00"></label></div>
@@ -63,6 +64,6 @@
 
     <section class="expired" id="expired-view" hidden><h1>האירוע כבר הסתיים</h1><p>ההזמנה אינה פעילה יותר. תודה שהייתם חלק מהחגיגה.</p><a href="./">לאתר של עמית מיטרני</a></section>
   </main>
-  <script type="module" src="assets/invitation.js?v=1"></script>
+  <script type="module" src="assets/invitation.js?v=2"></script>
 </body>
 </html>
