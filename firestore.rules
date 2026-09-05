@@ -91,6 +91,72 @@ service cloud.firestore {
       allow update: if false;
     }
 
+    match /invitations/{invitationId} {
+      allow create: if request.resource.data.keys().hasOnly([
+        'name', 'eventDate', 'eventTime', 'location', 'message', 'theme',
+        'photoData', 'status', 'accessCodeId', 'expiresAt', 'createdAt'
+      ])
+      && request.resource.data.name is string
+      && request.resource.data.name.size() >= 2
+      && request.resource.data.name.size() <= 40
+      && request.resource.data.eventDate is string
+      && request.resource.data.eventDate.size() == 10
+      && request.resource.data.eventTime is string
+      && request.resource.data.eventTime.size() <= 5
+      && request.resource.data.location is string
+      && request.resource.data.location.size() >= 2
+      && request.resource.data.location.size() <= 80
+      && request.resource.data.message is string
+      && request.resource.data.message.size() <= 240
+      && request.resource.data.theme in ['magic', 'celebration', 'elegant']
+      && request.resource.data.photoData is string
+      && request.resource.data.photoData.size() <= 430000
+      && request.resource.data.status == 'active'
+      && request.resource.data.accessCodeId is string
+      && request.resource.data.accessCodeId.size() == 64
+      && get(/databases/$(database)/documents/invitationAccess/$(request.resource.data.accessCodeId)).data.active == true
+      && get(/databases/$(database)/documents/invitationAccess/$(request.resource.data.accessCodeId)).data.used == false
+      && getAfter(/databases/$(database)/documents/invitationAccess/$(request.resource.data.accessCodeId)).data.used == true
+      && getAfter(/databases/$(database)/documents/invitationAccess/$(request.resource.data.accessCodeId)).data.invitationId == invitationId
+      && request.resource.data.expiresAt is timestamp
+      && request.resource.data.expiresAt > request.time
+      && request.resource.data.expiresAt < request.time + duration.value(400, 'd')
+      && request.resource.data.createdAt == request.time;
+      allow get: if isAdmin() || (resource.data.status == 'active' && resource.data.expiresAt > request.time);
+      allow list, update, delete: if isAdmin();
+
+      match /responses/{responseId} {
+        allow create: if get(/databases/$(database)/documents/invitations/$(invitationId)).data.status == 'active'
+          && get(/databases/$(database)/documents/invitations/$(invitationId)).data.expiresAt > request.time
+          && request.resource.data.keys().hasOnly(['guestName', 'response', 'guestCount', 'note', 'createdAt'])
+          && request.resource.data.guestName is string
+          && request.resource.data.guestName.size() >= 2
+          && request.resource.data.guestName.size() <= 60
+          && request.resource.data.response in ['yes', 'no']
+          && request.resource.data.guestCount is int
+          && request.resource.data.guestCount >= 0
+          && request.resource.data.guestCount <= 20
+          && request.resource.data.note is string
+          && request.resource.data.note.size() <= 160
+          && request.resource.data.createdAt == request.time;
+        allow read, update, delete: if isAdmin();
+      }
+    }
+
+    match /invitationAccess/{codeId} {
+      allow get: if true;
+      allow list, create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        resource.data.active == true
+        && resource.data.used == false
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['used', 'usedAt', 'invitationId'])
+        && request.resource.data.used == true
+        && request.resource.data.usedAt == request.time
+        && request.resource.data.invitationId is string
+        && getAfter(/databases/$(database)/documents/invitations/$(request.resource.data.invitationId)).data.accessCodeId == codeId
+      );
+    }
+
     match /siteContent/{pageId} {
       allow read: if true;
       allow create, update: if isAdmin()

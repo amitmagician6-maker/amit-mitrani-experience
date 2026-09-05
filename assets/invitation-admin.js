@@ -1,0 +1,26 @@
+import { db } from "./firebase-config.js";
+import { collection,deleteDoc,doc,getDocs,onSnapshot,orderBy,query,serverTimestamp,setDoc,updateDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+let started=false,items=[];
+const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+const date=value=>value?new Intl.DateTimeFormat("he-IL",{dateStyle:"medium"}).format(new Date(`${value}T12:00:00`)):"";
+const hashCode=async value=>Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value)))).map(x=>x.toString(16).padStart(2,"0")).join("");
+
+export const startInvitationAdmin=()=>{
+  if(started)return;started=true;
+  const list=document.querySelector("#invitation-admin-list"),stats=document.querySelector("#invitation-admin-stats");if(!list)return;
+  const codeButton=document.querySelector("#create-invitation-code"),codeResult=document.querySelector("#invitation-access-result");
+  if(codeButton)codeButton.onclick=async()=>{codeButton.disabled=true;try{const code=`AM-${crypto.getRandomValues(new Uint32Array(1))[0].toString().slice(0,6).padStart(6,"0")}`,id=await hashCode(code);await setDoc(doc(db,"invitationAccess",id),{active:true,used:false,createdAt:serverTimestamp()});const url=`${location.origin}/digital-invitation.html`;codeResult.hidden=false;codeResult.innerHTML=`<b>קוד חדש: <span>${code}</span></b><p>שלח ללקוח את הקוד ואת הקישור: <a href="${url}" target="_blank" rel="noopener">${url}</a></p><button class="btn" type="button">העתקת קוד וקישור</button>`;codeResult.querySelector("button").onclick=async()=>{await navigator.clipboard.writeText(`קוד להכנת ההזמנה: ${code}\n${url}`);codeResult.querySelector("button").textContent="הועתק ✓"}}catch(error){console.error(error);alert("לא הצלחנו ליצור קוד.")}finally{codeButton.disabled=false}};
+  onSnapshot(query(collection(db,"invitations"),orderBy("createdAt","desc")),async snapshot=>{
+    items=await Promise.all(snapshot.docs.map(async entry=>{const responses=await getDocs(collection(db,"invitations",entry.id,"responses"));return{id:entry.id,...entry.data(),responses:responses.docs.map(x=>({id:x.id,...x.data()}))}}));render(list,stats)
+  },error=>{console.error(error);list.innerHTML='<p class="empty">לא הצלחנו לטעון את ההזמנות.</p>'});
+};
+
+const render=(list,stats)=>{
+  const active=items.filter(x=>x.status==="active"&&(!x.expiresAt?.toDate||x.expiresAt.toDate()>new Date())),yes=items.flatMap(x=>x.responses).filter(x=>x.response==="yes"),guests=yes.reduce((sum,x)=>sum+(Number(x.guestCount)||0),0);
+  stats.innerHTML=`<span><small>הזמנות פעילות</small><b>${active.length}</b></span><span><small>אישורי הגעה</small><b>${yes.length}</b></span><span><small>משתתפים שאישרו</small><b>${guests}</b></span><span><small>כל ההזמנות</small><b>${items.length}</b></span>`;
+  if(!items.length){list.innerHTML='<p class="empty">עדיין לא נוצרו הזמנות.</p>';return}
+  list.innerHTML=items.map(item=>{const yes=item.responses.filter(x=>x.response==="yes"),no=item.responses.filter(x=>x.response==="no"),count=yes.reduce((sum,x)=>sum+(Number(x.guestCount)||0),0),url=`digital-invitation.html?id=${item.id}`;return`<article class="invitation-admin-card"><div class="invitation-admin-head"><div><small>${esc(date(item.eventDate))} · ${esc(item.eventTime)}</small><h3>${esc(item.name)}</h3><p>${esc(item.location)}</p></div><span class="badge ${item.status==='active'?'badge-approved':'badge-closed'}">${item.status==='active'?'פעילה':'סגורה'}</span></div><div class="invitation-counts"><span><b>${yes.length}</b> אישרו</span><span><b>${count}</b> משתתפים</span><span><b>${no.length}</b> לא מגיעים</span></div><details><summary>צפייה בשמות המאשרים</summary><div class="rsvp-names">${item.responses.length?item.responses.map(r=>`<p><b>${esc(r.guestName)}</b> — ${r.response==='yes'?`מגיעים (${r.guestCount})`:'לא מגיעים'}${r.note?` · ${esc(r.note)}`:''}</p>`).join(''):'<p>עדיין אין תשובות.</p>'}</div></details><div class="invitation-admin-actions"><a class="btn" href="${url}" target="_blank" rel="noopener">פתיחת ההזמנה</a><button class="btn" type="button" data-close="${item.id}">${item.status==='active'?'סגירת ההזמנה':'פתיחה מחדש'}</button><button class="btn btn-danger" type="button" data-delete="${item.id}">מחיקה</button></div></article>`}).join('');
+  list.querySelectorAll('[data-close]').forEach(button=>button.onclick=async()=>{const item=items.find(x=>x.id===button.dataset.close);button.disabled=true;try{await updateDoc(doc(db,"invitations",item.id),{status:item.status==='active'?'closed':'active'})}finally{button.disabled=false}});
+  list.querySelectorAll('[data-delete]').forEach(button=>button.onclick=async()=>{if(!confirm("למחוק את ההזמנה ואת כל אישורי ההגעה שלה?"))return;button.disabled=true;try{const responses=await getDocs(collection(db,"invitations",button.dataset.delete,"responses"));for(const response of responses.docs)await deleteDoc(response.ref);await deleteDoc(doc(db,"invitations",button.dataset.delete))}catch(error){console.error(error);alert("המחיקה לא הושלמה.")}finally{button.disabled=false}})
+};

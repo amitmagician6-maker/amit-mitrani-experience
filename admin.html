@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow">
   <title>מערכת הניהול | עמית מיטרני</title>
   <meta name="description" content="מערכת ניהול הפניות והאירועים של עמית מיטרני">
-  <link rel="stylesheet" href="assets/admin.css?v=4">
+  <link rel="stylesheet" href="assets/admin.css?v=5">
 </head>
 <body>
   <a class="skip-link" href="#admin-main">דילוג לתוכן המרכזי</a>
@@ -207,6 +207,12 @@
             </section>
           </aside>
           </div>
+          <section class="panel invitation-admin-panel">
+            <div class="panel-head"><div><span class="eyebrow">הזמנות דיגיטליות</span><h2>אירועים ואישורי הגעה</h2></div><button class="btn" id="create-invitation-code" type="button">יצירת קוד ללקוח</button></div>
+            <div class="invitation-access-result" id="invitation-access-result" hidden></div>
+            <div class="invitation-admin-stats" id="invitation-admin-stats"></div>
+            <div class="invitation-admin-list" id="invitation-admin-list"><p class="empty">טוען הזמנות…</p></div>
+          </section>
         </section>
 
         <section class="analytics-view" id="analytics-view" hidden>
@@ -279,6 +285,6 @@
   </dialog>
 
   <div class="toast" id="admin-toast" role="status"></div>
-  <script type="module" src="assets/admin.js?v=12"></script>
+  <script type="module" src="assets/admin.js?v=13"></script>
 </body>
 </html>

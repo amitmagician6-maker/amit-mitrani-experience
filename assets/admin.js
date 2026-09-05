@@ -1,6 +1,7 @@
 import { auth, db } from "./firebase-config.js";
 import { startCms } from "./cms-admin.js?v=6";
 import { startAnalytics } from "./analytics-admin.js?v=1";
+import { startInvitationAdmin } from "./invitation-admin.js?v=1";
 import {
   GoogleAuthProvider,
   onAuthStateChanged,
@@ -371,6 +372,7 @@ onAuthStateChanged(auth, (user) => {
     userLabel.textContent = "בדיקה מקומית";
     startCms();
     startAnalytics();
+    startInvitationAdmin();
     return;
   }
 
@@ -385,6 +387,7 @@ onAuthStateChanged(auth, (user) => {
     startRealtime();
     startCms();
     startAnalytics();
+    startInvitationAdmin();
     return;
   }
 
