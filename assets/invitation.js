@@ -9,8 +9,8 @@ const setTheme=(el,theme)=>{el.classList.remove("theme-magic","theme-celebration
 const hashCode=async value=>Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(safe(value).toUpperCase())))).map(x=>x.toString(16).padStart(2,"0")).join("");
 
 const compressPhoto=file=>new Promise((resolve,reject)=>{
-  if(!file){resolve("");return} if(file.size>12*1024*1024){reject(new Error("large"));return}
-  const reader=new FileReader();reader.onerror=reject;reader.onload=()=>{const image=new Image();image.onerror=reject;image.onload=()=>{const max=1100,scale=Math.min(1,max/Math.max(image.width,image.height)),canvas=document.createElement("canvas");canvas.width=Math.round(image.width*scale);canvas.height=Math.round(image.height*scale);canvas.getContext("2d").drawImage(image,0,0,canvas.width,canvas.height);resolve(canvas.toDataURL("image/webp",.72))};image.src=reader.result};reader.readAsDataURL(file)
+  if(!file){resolve("");return} if(file.size>20*1024*1024){reject(new Error("large"));return}
+  const reader=new FileReader();reader.onerror=reject;reader.onload=()=>{const image=new Image();image.onerror=reject;image.onload=()=>{let max=1400,quality=.82,result="";for(let attempt=0;attempt<10;attempt++){const scale=Math.min(1,max/Math.max(image.width,image.height)),canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));canvas.getContext("2d").drawImage(image,0,0,canvas.width,canvas.height);result=canvas.toDataURL("image/webp",quality);if(result.length<=420000){resolve(result);return}quality=Math.max(.48,quality-.07);max=Math.round(max*.86)}reject(new Error("large"))};image.src=reader.result};reader.readAsDataURL(file)
 });
 
 const creator=$("#creator-view"),intro=$("#creator-intro"),guest=$("#guest-view"),expired=$("#expired-view"),result=$("#result-view");
