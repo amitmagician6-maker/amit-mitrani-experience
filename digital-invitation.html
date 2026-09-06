@@ -8,6 +8,7 @@
   <meta name="robots" content="noindex,nofollow">
   <link rel="canonical" href="https://amitgic.co.il/digital-invitation.html">
   <link rel="stylesheet" href="assets/invitation.css?v=2">
+  <link rel="stylesheet" href="assets/invitation-upgrade.css?v=1">
   <style>[hidden]{display:none!important}</style>
 </head>
 <body><!-- Google Tag Manager (noscript) --><noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-M7H725PC" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript><!-- End Google Tag Manager (noscript) -->
@@ -22,9 +23,10 @@
         <small class="privacy">הקוד אישי ותקף ליצירת הזמנה אחת בלבד.</small></div>
         <p class="admin-access" id="admin-access" hidden>מחובר כמנהל — אפשר ליצור הזמנה ללא קוד.</p>
         <div class="step"><b>1</b><span>פרטי האירוע</span></div>
-        <label>שם החוגג/ת או האירוע<input name="name" required maxlength="40" placeholder="לדוגמה: יום ההולדת של נועה"></label>
+        <div class="two"><label>שם החוגג/ת<input name="name" required maxlength="40" placeholder="לדוגמה: נועה"></label><label>גיל<input name="age" type="number" required min="1" max="120" inputmode="numeric" placeholder="8"></label></div>
         <div class="two"><label>תאריך<input name="eventDate" type="date" required></label><label>שעה<input name="eventTime" type="time" required value="17:00"></label></div>
-        <label>מיקום<input name="location" required maxlength="80" placeholder="רחוב, אולם או עיר"></label>
+        <label>שם המקום<input name="venueName" required maxlength="80" placeholder="לדוגמה: אולם הקסמים"></label>
+        <label>כתובת מלאה<input name="address" required maxlength="160" autocomplete="street-address" placeholder="רחוב, מספר, עיר"></label>
         <label>הודעה למוזמנים<textarea name="message" maxlength="240" rows="3" placeholder="מחכים לחגוג איתכם!"></textarea></label>
         <div class="step"><b>2</b><span>עיצוב ותמונה</span></div>
         <div class="themes" aria-label="בחירת עיצוב">
@@ -35,15 +37,15 @@
         <label>תמונה אישית — לא חובה<input id="photo" type="file" accept="image/jpeg,image/png,image/webp"></label>
         <small class="privacy">התמונה נדחסת לפני השמירה ונמחקת יחד עם ההזמנה. אין צורך לפתוח חשבון.</small>
         <label class="terms"><input type="checkbox" required> אני מאשר/ת שהפרטים והתמונה ישמשו להצגת ההזמנה ואישורי ההגעה.</label>
-        <button class="primary" type="submit">יצירת ההזמנה שלי</button>
+        <button class="primary" type="submit" id="publish-invitation">מעבר לתצוגה מקדימה</button>
         <p class="status" id="creator-status" role="status"></p>
       </form>
 
       <article class="preview theme-magic" id="preview">
         <div class="seal">חוויה מבית עמית מיטרני</div>
         <img id="preview-photo" alt="" hidden>
-        <div class="preview-copy"><small>אתם מוזמנים</small><h2 id="preview-name">האירוע שלכם</h2><p id="preview-message">מחכים לחגוג איתכם!</p></div>
-        <div class="details"><span><small>תאריך</small><b id="preview-date">לבחירתכם</b></span><span><small>שעה</small><b id="preview-time">17:00</b></span><span><small>מיקום</small><b id="preview-location">יעודכן כאן</b></span></div>
+        <div class="preview-copy"><small>אתם מוזמנים</small><h2 id="preview-name">האירוע שלכם</h2><p id="preview-age"></p><p id="preview-message">מחכים לחגוג איתכם!</p></div>
+        <div class="details"><span><small>תאריך</small><b id="preview-date">לבחירתכם</b></span><span><small>שעה</small><b id="preview-time">17:00</b></span><span><small>מקום</small><b id="preview-location">יעודכן כאן</b></span></div>
       </article>
     </section>
 
@@ -52,19 +54,24 @@
       <input id="result-link" readonly aria-label="קישור להזמנה">
       <div class="result-actions"><button class="primary" id="share-invitation" type="button">שיתוף ההזמנה</button><button id="copy-link" type="button">העתקת קישור</button><button id="download-invitation" type="button">הורדה כתמונה</button></div>
       <a class="open-link" id="open-invitation" href="#">פתיחת ההזמנה</a>
+      <div class="management-link"><strong>קישור הניהול הפרטי שלך</strong><p>שמרו אותו כדי לראות את אישורי ההגעה. אין להעביר אותו למוזמנים.</p><input id="management-link" readonly aria-label="קישור ניהול פרטי"><button id="copy-management" type="button">העתקת קישור הניהול</button></div>
     </section>
 
     <section class="guest" id="guest-view" hidden>
       <article class="preview guest-card" id="guest-card">
         <div class="seal">חוויה מבית עמית מיטרני</div><img id="guest-photo" alt="" hidden>
-        <div class="preview-copy"><small>אתם מוזמנים</small><h1 id="guest-name"></h1><p id="guest-message"></p></div>
+        <div class="preview-copy"><small>אתם מוזמנים</small><h1 id="guest-name"></h1><p id="guest-age"></p><p id="guest-message"></p></div>
         <div class="details"><span><small>תאריך</small><b id="guest-date"></b></span><span><small>שעה</small><b id="guest-time"></b></span><span><small>מיקום</small><b id="guest-location"></b></span></div>
       </article>
-      <form class="rsvp-card" id="rsvp-form"><h2>מאשרים הגעה</h2><label>שם מלא<input name="guestName" required maxlength="60"></label><div class="two"><label>מגיעים?<select name="response"><option value="yes">כן, בשמחה</option><option value="no">לצערי לא</option></select></label><label>כמה מגיעים?<input name="guestCount" type="number" min="1" max="20" value="1"></label></div><label>הערה — לא חובה<input name="note" maxlength="160"></label><button class="primary" type="submit">שליחת תשובה</button><p class="status" id="rsvp-status" role="status"></p></form>
+      <div class="guest-actions"><a id="navigate-waze" target="_blank" rel="noopener">ניווט ב־Waze</a><a id="navigate-google" target="_blank" rel="noopener">ניווט ב־Google Maps</a><button id="add-calendar" type="button">הוסף ליומן</button><button id="jump-rsvp" type="button">אישור הגעה</button><button id="guest-whatsapp" type="button">שיתוף ב־WhatsApp</button></div>
+      <form class="rsvp-card" id="rsvp-form"><h2>מאשרים הגעה</h2><label>שם מלא<input name="guestName" required maxlength="60"></label><label>טלפון של הורה / מלווה — לא חובה<input name="guardianPhone" type="tel" maxlength="30" inputmode="tel" autocomplete="tel"></label><div class="two"><label>מגיעים?<select name="response"><option value="yes">כן, בשמחה</option><option value="no">לצערי לא</option></select></label><label>כמה אנשים מגיעים?<input name="guestCount" type="number" min="1" max="20" value="1"></label></div><label>הערה — לא חובה<input name="note" maxlength="160"></label><button class="primary" type="submit">שליחת תשובה</button><p class="status" id="rsvp-status" role="status"></p><div class="post-rsvp" id="post-rsvp" hidden><span>רוצים גם יום הולדת עם עמית מיטרני?</span><a href="shows-for-kids.html">לפרטים על המופע</a></div></form>
+      <footer class="invitation-brand">עמית מיטרני – קוסם ואמן חושים</footer>
     </section>
+
+    <section class="management" id="management-view" hidden><div class="management-head"><span>ניהול ההזמנה</span><h1 id="management-title">טוען…</h1><p id="management-summary"></p><div class="result-actions"><button class="primary" id="management-share" type="button">שיתוף ההזמנה</button><button id="management-copy" type="button">העתקת הקישור</button></div></div><div class="management-stats" id="management-stats"></div><div class="management-responses" id="management-responses"><p>טוען אישורי הגעה…</p></div></section>
 
     <section class="expired" id="expired-view" hidden><h1>האירוע כבר הסתיים</h1><p>ההזמנה אינה פעילה יותר. תודה שהייתם חלק מהחגיגה.</p><a href="./">לאתר של עמית מיטרני</a></section>
   </main>
-  <script type="module" src="assets/invitation.js?v=3"></script>
+  <script type="module" src="assets/invitation.js?v=4"></script>
 </body>
 </html>

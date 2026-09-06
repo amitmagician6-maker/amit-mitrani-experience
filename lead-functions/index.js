@@ -2,6 +2,7 @@ import { initializeApp } from "firebase-admin/app";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { defineSecret } from "firebase-functions/params";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
+import { createHash, timingSafeEqual } from "node:crypto";
 import nodemailer from "nodemailer";
 
 initializeApp();
@@ -102,5 +103,38 @@ export const notifyAmitOfLead = onDocumentCreated({
       updatedAt: FieldValue.serverTimestamp()
     }, { merge: true });
     throw error;
+  }
+});
+
+export const buildInvitationManagementView = onDocumentCreated({
+  document: "invitationManagementRequests/{requestId}",
+  region: "me-west1"
+}, async (event) => {
+  const request = event.data?.data() || {};
+  const invitationId = String(request.invitationId || "");
+  const token = String(request.token || "");
+  const requestRef = event.data.ref;
+  if (!/^[A-Za-z0-9_-]{10,80}$/.test(invitationId) || !/^[A-Za-z0-9_-]{40,80}$/.test(token)) {
+    await requestRef.set({ status: "denied", token: FieldValue.delete(), processedAt: FieldValue.serverTimestamp() }, { merge: true }); return;
+  }
+  try {
+    const invitationRef = db.collection("invitations").doc(invitationId);
+    const invitationSnap = await invitationRef.get();
+    if (!invitationSnap.exists) { await requestRef.set({ status: "denied", token: FieldValue.delete(), processedAt: FieldValue.serverTimestamp() }, { merge: true }); return; }
+    const invitation = invitationSnap.data();
+    const actual = Buffer.from(createHash("sha256").update(token.toUpperCase()).digest("hex"));
+    const expected = Buffer.from(String(invitation.managementTokenHash || ""));
+    if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) {
+      await requestRef.set({ status: "denied", token: FieldValue.delete(), processedAt: FieldValue.serverTimestamp() }, { merge: true }); return;
+    }
+    const responsesSnap = await invitationRef.collection("responses").orderBy("createdAt", "desc").get();
+    const responses = responsesSnap.docs.map((entry) => {
+      const item = entry.data();
+      return { guestName: text(item.guestName, ""), guardianPhone: text(item.guardianPhone, ""), response: item.response, guestCount: Number(item.guestCount || 0), note: text(item.note, "") };
+    });
+    await requestRef.set({ status: "ready", token: FieldValue.delete(), processedAt: FieldValue.serverTimestamp(), invitation: { name: invitation.name, eventDate: invitation.eventDate, eventTime: invitation.eventTime, venueName: invitation.venueName || "", location: invitation.location || "" }, responses }, { merge: true });
+  } catch (error) {
+    console.error("buildInvitationManagementView failed", error);
+    await requestRef.set({ status: "error", token: FieldValue.delete(), processedAt: FieldValue.serverTimestamp() }, { merge: true });
   }
 });

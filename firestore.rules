@@ -93,25 +93,37 @@ service cloud.firestore {
 
     match /invitations/{invitationId} {
       allow create: if request.resource.data.keys().hasOnly([
-        'name', 'eventDate', 'eventTime', 'location', 'message', 'theme',
-        'photoData', 'status', 'accessCodeId', 'expiresAt', 'createdAt'
+        'name', 'age', 'eventDate', 'eventTime', 'venueName', 'address',
+        'location', 'message', 'theme', 'photoData', 'status', 'accessCodeId',
+        'managementTokenHash', 'expiresAt', 'createdAt'
       ])
       && request.resource.data.name is string
       && request.resource.data.name.size() >= 2
       && request.resource.data.name.size() <= 40
+      && request.resource.data.age is int
+      && request.resource.data.age >= 1
+      && request.resource.data.age <= 120
       && request.resource.data.eventDate is string
       && request.resource.data.eventDate.size() == 10
       && request.resource.data.eventTime is string
       && request.resource.data.eventTime.size() <= 5
+      && request.resource.data.venueName is string
+      && request.resource.data.venueName.size() >= 2
+      && request.resource.data.venueName.size() <= 80
+      && request.resource.data.address is string
+      && request.resource.data.address.size() >= 4
+      && request.resource.data.address.size() <= 160
       && request.resource.data.location is string
       && request.resource.data.location.size() >= 2
-      && request.resource.data.location.size() <= 80
+      && request.resource.data.location.size() <= 250
       && request.resource.data.message is string
       && request.resource.data.message.size() <= 240
       && request.resource.data.theme in ['magic', 'celebration', 'elegant']
       && request.resource.data.photoData is string
       && request.resource.data.photoData.size() <= 430000
       && request.resource.data.status == 'active'
+      && request.resource.data.managementTokenHash is string
+      && request.resource.data.managementTokenHash.size() == 64
       && (isAdmin() || (
         request.resource.data.accessCodeId is string
         && request.resource.data.accessCodeId.size() == 64
@@ -130,10 +142,12 @@ service cloud.firestore {
       match /responses/{responseId} {
         allow create: if get(/databases/$(database)/documents/invitations/$(invitationId)).data.status == 'active'
           && get(/databases/$(database)/documents/invitations/$(invitationId)).data.expiresAt > request.time
-          && request.resource.data.keys().hasOnly(['guestName', 'response', 'guestCount', 'note', 'createdAt'])
+          && request.resource.data.keys().hasOnly(['guestName', 'guardianPhone', 'response', 'guestCount', 'note', 'createdAt'])
           && request.resource.data.guestName is string
           && request.resource.data.guestName.size() >= 2
           && request.resource.data.guestName.size() <= 60
+          && request.resource.data.guardianPhone is string
+          && request.resource.data.guardianPhone.size() <= 30
           && request.resource.data.response in ['yes', 'no']
           && request.resource.data.guestCount is int
           && request.resource.data.guestCount >= 0
@@ -157,6 +171,20 @@ service cloud.firestore {
         && request.resource.data.invitationId is string
         && getAfter(/databases/$(database)/documents/invitations/$(request.resource.data.invitationId)).data.accessCodeId == codeId
       );
+    }
+
+    match /invitationManagementRequests/{requestId} {
+      allow create: if request.resource.data.keys().hasOnly(['invitationId', 'token', 'createdAt'])
+        && request.resource.data.invitationId is string
+        && request.resource.data.invitationId.size() >= 10
+        && request.resource.data.invitationId.size() <= 80
+        && request.resource.data.token is string
+        && request.resource.data.token.size() >= 40
+        && request.resource.data.token.size() <= 80
+        && request.resource.data.createdAt == request.time;
+      allow get: if true;
+      allow list: if isAdmin();
+      allow update, delete: if isAdmin();
     }
 
     match /siteContent/{pageId} {
