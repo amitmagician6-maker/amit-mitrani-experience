@@ -174,13 +174,28 @@ service cloud.firestore {
     }
 
     match /invitationManagementRequests/{requestId} {
-      allow create: if request.resource.data.keys().hasOnly(['invitationId', 'token', 'createdAt'])
+      allow create: if request.resource.data.keys().hasOnly(['invitationId', 'token', 'action', 'payload', 'createdAt'])
         && request.resource.data.invitationId is string
         && request.resource.data.invitationId.size() >= 10
         && request.resource.data.invitationId.size() <= 80
         && request.resource.data.token is string
         && request.resource.data.token.size() >= 40
         && request.resource.data.token.size() <= 80
+        && (!request.resource.data.keys().hasAny(['action']) || request.resource.data.action in ['view', 'update'])
+        && (!request.resource.data.keys().hasAny(['payload']) || (
+          request.resource.data.action == 'update'
+          && request.resource.data.payload is map
+          && request.resource.data.payload.keys().hasOnly(['name', 'age', 'eventDate', 'eventTime', 'venueName', 'address', 'message', 'theme', 'photoData'])
+          && request.resource.data.payload.name is string && request.resource.data.payload.name.size() <= 40
+          && request.resource.data.payload.age is number
+          && request.resource.data.payload.eventDate is string && request.resource.data.payload.eventDate.size() == 10
+          && request.resource.data.payload.eventTime is string && request.resource.data.payload.eventTime.size() == 5
+          && request.resource.data.payload.venueName is string && request.resource.data.payload.venueName.size() <= 80
+          && request.resource.data.payload.address is string && request.resource.data.payload.address.size() <= 160
+          && request.resource.data.payload.message is string && request.resource.data.payload.message.size() <= 240
+          && request.resource.data.payload.theme in ['magic', 'celebration', 'elegant']
+          && request.resource.data.payload.photoData is string && request.resource.data.payload.photoData.size() <= 430000
+        ))
         && request.resource.data.createdAt == request.time;
       allow get: if true;
       allow list: if isAdmin();

@@ -1,7 +1,8 @@
 import { initializeApp } from "firebase-admin/app";
-import { FieldValue, getFirestore } from "firebase-admin/firestore";
+import { FieldValue, Timestamp, getFirestore } from "firebase-admin/firestore";
 import { defineSecret } from "firebase-functions/params";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
+import { onRequest } from "firebase-functions/v2/https";
 import { createHash, timingSafeEqual } from "node:crypto";
 import nodemailer from "nodemailer";
 
@@ -127,14 +128,62 @@ export const buildInvitationManagementView = onDocumentCreated({
     if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) {
       await requestRef.set({ status: "denied", token: FieldValue.delete(), processedAt: FieldValue.serverTimestamp() }, { merge: true }); return;
     }
+    let currentInvitation = invitation;
+    if (request.action === "update") {
+      const payload = request.payload || {};
+      const name = text(payload.name, "").slice(0, 40);
+      const age = Number(payload.age);
+      const eventDate = text(payload.eventDate, "");
+      const eventTime = text(payload.eventTime, "");
+      const venueName = text(payload.venueName, "").slice(0, 80);
+      const address = text(payload.address, "").slice(0, 160);
+      const message = text(payload.message, "").slice(0, 240);
+      const theme = ["magic", "celebration", "elegant"].includes(payload.theme) ? payload.theme : "magic";
+      const photoData = text(payload.photoData, "");
+      if (!name || !Number.isInteger(age) || age < 1 || age > 120 || !/^\d{4}-\d{2}-\d{2}$/.test(eventDate) || !/^\d{2}:\d{2}$/.test(eventTime) || !venueName || !address || photoData.length > 430000 || (photoData && !/^data:image\/(webp|jpeg|png);base64,/.test(photoData))) throw new Error("invalid update");
+      const expiry = new Date(`${eventDate}T23:59:59`);
+      expiry.setDate(expiry.getDate() + 2);
+      const update = { name, age, eventDate, eventTime, venueName, address, location: `${venueName}, ${address}`.slice(0, 250), message, theme, photoData, expiresAt: Timestamp.fromDate(expiry), updatedAt: FieldValue.serverTimestamp() };
+      await invitationRef.set(update, { merge: true });
+      currentInvitation = { ...invitation, ...update };
+    }
     const responsesSnap = await invitationRef.collection("responses").orderBy("createdAt", "desc").get();
     const responses = responsesSnap.docs.map((entry) => {
       const item = entry.data();
       return { guestName: text(item.guestName, ""), guardianPhone: text(item.guardianPhone, ""), response: item.response, guestCount: Number(item.guestCount || 0), note: text(item.note, "") };
     });
-    await requestRef.set({ status: "ready", token: FieldValue.delete(), processedAt: FieldValue.serverTimestamp(), invitation: { name: invitation.name, eventDate: invitation.eventDate, eventTime: invitation.eventTime, venueName: invitation.venueName || "", location: invitation.location || "" }, responses }, { merge: true });
+    const publicInvitation = { name: currentInvitation.name, age: currentInvitation.age || "", eventDate: currentInvitation.eventDate, eventTime: currentInvitation.eventTime, venueName: currentInvitation.venueName || "", address: currentInvitation.address || "", location: currentInvitation.location || "", message: currentInvitation.message || "", theme: currentInvitation.theme || "magic", photoData: currentInvitation.photoData || "" };
+    await requestRef.set({ status: "ready", token: FieldValue.delete(), payload: FieldValue.delete(), processedAt: FieldValue.serverTimestamp(), invitation: publicInvitation, responses }, { merge: true });
   } catch (error) {
     console.error("buildInvitationManagementView failed", error);
     await requestRef.set({ status: "error", token: FieldValue.delete(), processedAt: FieldValue.serverTimestamp() }, { merge: true });
+  }
+});
+
+export const invitationShare = onRequest({ region: "me-west1", cors: false }, async (request, response) => {
+  const invitationId = String(request.query.id || "");
+  if (!/^[A-Za-z0-9_-]{10,80}$/.test(invitationId)) { response.status(404).send("Not found"); return; }
+  try {
+    const snapshot = await db.collection("invitations").doc(invitationId).get();
+    if (!snapshot.exists) { response.status(404).send("Not found"); return; }
+    const invitation = snapshot.data();
+    const expiry = invitation.expiresAt?.toDate?.();
+    if (invitation.status !== "active" || (expiry && expiry < new Date())) { response.status(410).send("Invitation expired"); return; }
+    if (request.query.image === "1") {
+      const match = String(invitation.photoData || "").match(/^data:(image\/(?:webp|jpeg|png));base64,(.+)$/);
+      if (match) { response.set("Content-Type", match[1]); response.set("Cache-Control", "public, max-age=3600"); response.send(Buffer.from(match[2], "base64")); return; }
+      response.redirect(302, "https://amitgic.co.il/assets/optimized/hero-amit-1200.webp"); return;
+    }
+    const guestUrl = `https://amitgic.co.il/digital-invitation.html?id=${encodeURIComponent(invitationId)}`;
+    const functionUrl = `https://me-west1-amit-mitrani-crm.cloudfunctions.net/invitationShare?id=${encodeURIComponent(invitationId)}`;
+    const title = `יום ההולדת של ${text(invitation.name, "החוגג/ת")} 🎉`;
+    const description = "מוזמנים לחגוג איתנו! לחצו לצפייה בהזמנה ולאישור הגעה.";
+    const imageUrl = `${functionUrl}&image=1`;
+    response.set("Content-Type", "text/html; charset=utf-8");
+    response.set("Cache-Control", "public, max-age=300");
+    response.status(200).send(`<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><title>${escapeHtml(title)}</title><meta name="description" content="${escapeHtml(description)}"><meta property="og:type" content="website"><meta property="og:title" content="${escapeHtml(title)}"><meta property="og:description" content="${escapeHtml(description)}"><meta property="og:image" content="${escapeHtml(imageUrl)}"><meta property="og:url" content="${escapeHtml(functionUrl)}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${escapeHtml(title)}"><meta name="twitter:description" content="${escapeHtml(description)}"><meta name="twitter:image" content="${escapeHtml(imageUrl)}"><meta http-equiv="refresh" content="0;url=${escapeHtml(guestUrl)}"></head><body><p><a href="${escapeHtml(guestUrl)}">פתיחת ההזמנה</a></p><script>location.replace(${JSON.stringify(guestUrl)})</script></body></html>`);
+  } catch (error) {
+    console.error("invitationShare failed", error);
+    response.status(500).send("Unable to load invitation");
   }
 });
