@@ -70,8 +70,8 @@
     || document.querySelector('meta[name="description"]')?.content
     || "";
   const canonical = document.querySelector('link[rel="canonical"]')?.href;
-  const isShortGitHubAddress = window.location.hostname === "djskabi-png.github.io"
-    && window.location.pathname.startsWith("/amit/");
+  const isShortGitHubAddress = window.location.hostname === "amitmagician6-maker.github.io"
+    && window.location.pathname.startsWith("/amit-mitrani-experience/");
   const currentUrl = isShortGitHubAddress || window.location.hash
     ? window.location.href
     : (canonical || window.location.href);
