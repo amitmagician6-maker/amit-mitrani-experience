@@ -93,13 +93,19 @@ service cloud.firestore {
 
     match /invitations/{invitationId} {
       allow create: if request.resource.data.keys().hasOnly([
-        'name', 'age', 'eventDate', 'eventTime', 'venueName', 'address',
+        'name', 'firstName', 'age', 'gender', 'secondName', 'secondAge', 'secondGender', 'messageMode', 'eventDate', 'eventTime', 'venueName', 'address',
         'location', 'message', 'theme', 'photoData', 'status', 'accessCodeId',
         'managementTokenHash', 'expiresAt', 'createdAt'
       ])
       && request.resource.data.name is string
       && request.resource.data.name.size() >= 2
-      && request.resource.data.name.size() <= 40
+      && request.resource.data.name.size() <= 85
+      && (!request.resource.data.keys().hasAny(['firstName']) || (request.resource.data.firstName is string && request.resource.data.firstName.size() <= 40))
+      && (!request.resource.data.keys().hasAny(['gender']) || request.resource.data.gender in ['male', 'female'])
+      && (!request.resource.data.keys().hasAny(['secondName']) || (request.resource.data.secondName is string && request.resource.data.secondName.size() <= 40))
+      && (!request.resource.data.keys().hasAny(['secondAge']) || (request.resource.data.secondAge is int && request.resource.data.secondAge >= 1 && request.resource.data.secondAge <= 120))
+      && (!request.resource.data.keys().hasAny(['secondGender']) || request.resource.data.secondGender in ['male', 'female'])
+      && (!request.resource.data.keys().hasAny(['messageMode']) || request.resource.data.messageMode in ['auto', 'custom'])
       && request.resource.data.age is int
       && request.resource.data.age >= 1
       && request.resource.data.age <= 120
@@ -129,6 +135,8 @@ service cloud.firestore {
         && request.resource.data.accessCodeId.size() == 64
         && get(/databases/$(database)/documents/invitationAccess/$(request.resource.data.accessCodeId)).data.active == true
         && get(/databases/$(database)/documents/invitationAccess/$(request.resource.data.accessCodeId)).data.used == false
+        && (!get(/databases/$(database)/documents/invitationAccess/$(request.resource.data.accessCodeId)).data.keys().hasAny(['expiresAt'])
+          || get(/databases/$(database)/documents/invitationAccess/$(request.resource.data.accessCodeId)).data.expiresAt > request.time)
         && getAfter(/databases/$(database)/documents/invitationAccess/$(request.resource.data.accessCodeId)).data.used == true
         && getAfter(/databases/$(database)/documents/invitationAccess/$(request.resource.data.accessCodeId)).data.invitationId == invitationId
       ))
@@ -185,9 +193,15 @@ service cloud.firestore {
         && (!request.resource.data.keys().hasAny(['payload']) || (
           request.resource.data.action == 'update'
           && request.resource.data.payload is map
-          && request.resource.data.payload.keys().hasOnly(['name', 'age', 'eventDate', 'eventTime', 'venueName', 'address', 'message', 'theme', 'photoData'])
-          && request.resource.data.payload.name is string && request.resource.data.payload.name.size() <= 40
+          && request.resource.data.payload.keys().hasOnly(['name', 'firstName', 'age', 'gender', 'secondName', 'secondAge', 'secondGender', 'messageMode', 'eventDate', 'eventTime', 'venueName', 'address', 'message', 'theme', 'photoData'])
+          && request.resource.data.payload.name is string && request.resource.data.payload.name.size() <= 85
+          && (!request.resource.data.payload.keys().hasAny(['firstName']) || (request.resource.data.payload.firstName is string && request.resource.data.payload.firstName.size() <= 40))
           && request.resource.data.payload.age is number
+          && (!request.resource.data.payload.keys().hasAny(['gender']) || request.resource.data.payload.gender in ['male', 'female'])
+          && (!request.resource.data.payload.keys().hasAny(['secondName']) || (request.resource.data.payload.secondName is string && request.resource.data.payload.secondName.size() <= 40))
+          && (!request.resource.data.payload.keys().hasAny(['secondAge']) || (request.resource.data.payload.secondAge is number && request.resource.data.payload.secondAge >= 0 && request.resource.data.payload.secondAge <= 120))
+          && (!request.resource.data.payload.keys().hasAny(['secondGender']) || (request.resource.data.payload.secondGender is string && request.resource.data.payload.secondGender.size() <= 6))
+          && (!request.resource.data.payload.keys().hasAny(['messageMode']) || request.resource.data.payload.messageMode in ['auto', 'custom'])
           && request.resource.data.payload.eventDate is string && request.resource.data.payload.eventDate.size() == 10
           && request.resource.data.payload.eventTime is string && request.resource.data.payload.eventTime.size() == 5
           && request.resource.data.payload.venueName is string && request.resource.data.payload.venueName.size() <= 80
