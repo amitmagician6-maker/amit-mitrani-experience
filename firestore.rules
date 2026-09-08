@@ -93,13 +93,14 @@ service cloud.firestore {
 
     match /invitations/{invitationId} {
       allow create: if request.resource.data.keys().hasOnly([
-        'name', 'firstName', 'age', 'gender', 'secondName', 'secondAge', 'secondGender', 'messageMode', 'eventDate', 'eventTime', 'venueName', 'address',
+        'name', 'celebrants', 'firstName', 'age', 'gender', 'secondName', 'secondAge', 'secondGender', 'messageMode', 'eventDate', 'eventTime', 'venueName', 'address',
         'location', 'message', 'theme', 'photoData', 'status', 'accessCodeId',
         'managementTokenHash', 'expiresAt', 'createdAt'
       ])
       && request.resource.data.name is string
       && request.resource.data.name.size() >= 2
-      && request.resource.data.name.size() <= 85
+      && request.resource.data.name.size() <= 400
+      && (!request.resource.data.keys().hasAny(['celebrants']) || (request.resource.data.celebrants is list && request.resource.data.celebrants.size() >= 1 && request.resource.data.celebrants.size() <= 20))
       && (!request.resource.data.keys().hasAny(['firstName']) || (request.resource.data.firstName is string && request.resource.data.firstName.size() <= 40))
       && (!request.resource.data.keys().hasAny(['gender']) || request.resource.data.gender in ['male', 'female'])
       && (!request.resource.data.keys().hasAny(['secondName']) || (request.resource.data.secondName is string && request.resource.data.secondName.size() <= 40))
@@ -123,7 +124,7 @@ service cloud.firestore {
       && request.resource.data.location.size() >= 2
       && request.resource.data.location.size() <= 250
       && request.resource.data.message is string
-      && request.resource.data.message.size() <= 240
+      && request.resource.data.message.size() <= 500
       && request.resource.data.theme in ['magic', 'celebration', 'elegant']
       && request.resource.data.photoData is string
       && request.resource.data.photoData.size() <= 430000
@@ -193,8 +194,9 @@ service cloud.firestore {
         && (!request.resource.data.keys().hasAny(['payload']) || (
           request.resource.data.action == 'update'
           && request.resource.data.payload is map
-          && request.resource.data.payload.keys().hasOnly(['name', 'firstName', 'age', 'gender', 'secondName', 'secondAge', 'secondGender', 'messageMode', 'eventDate', 'eventTime', 'venueName', 'address', 'message', 'theme', 'photoData'])
-          && request.resource.data.payload.name is string && request.resource.data.payload.name.size() <= 85
+          && request.resource.data.payload.keys().hasOnly(['name', 'celebrants', 'firstName', 'age', 'gender', 'secondName', 'secondAge', 'secondGender', 'messageMode', 'eventDate', 'eventTime', 'venueName', 'address', 'message', 'theme', 'photoData'])
+          && request.resource.data.payload.name is string && request.resource.data.payload.name.size() <= 400
+          && (!request.resource.data.payload.keys().hasAny(['celebrants']) || (request.resource.data.payload.celebrants is list && request.resource.data.payload.celebrants.size() >= 1 && request.resource.data.payload.celebrants.size() <= 20))
           && (!request.resource.data.payload.keys().hasAny(['firstName']) || (request.resource.data.payload.firstName is string && request.resource.data.payload.firstName.size() <= 40))
           && request.resource.data.payload.age is number
           && (!request.resource.data.payload.keys().hasAny(['gender']) || request.resource.data.payload.gender in ['male', 'female'])
@@ -206,7 +208,7 @@ service cloud.firestore {
           && request.resource.data.payload.eventTime is string && request.resource.data.payload.eventTime.size() == 5
           && request.resource.data.payload.venueName is string && request.resource.data.payload.venueName.size() <= 80
           && request.resource.data.payload.address is string && request.resource.data.payload.address.size() <= 160
-          && request.resource.data.payload.message is string && request.resource.data.payload.message.size() <= 240
+          && request.resource.data.payload.message is string && request.resource.data.payload.message.size() <= 500
           && request.resource.data.payload.theme in ['magic', 'celebration', 'elegant']
           && request.resource.data.payload.photoData is string && request.resource.data.payload.photoData.size() <= 430000
         ))
