@@ -1,7 +1,7 @@
 import { auth, db } from "./firebase-config.js";
 import { startCms } from "./cms-admin.js?v=7";
 import { startAnalytics } from "./analytics-admin.js?v=1";
-import { startInvitationAdmin } from "./invitation-admin.js?v=3";
+import { startInvitationAdmin } from "./invitation-admin.js?v=4";
 import {
   GoogleAuthProvider,
   onAuthStateChanged,

@@ -1,11 +1,13 @@
 import { db } from "./firebase-config.js";
 import { collection,deleteDoc,doc,getDocs,onSnapshot,orderBy,query,serverTimestamp,setDoc,updateDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-let started=false,items=[],searchText="";
+let started=false,items=[],searchText="",expiryMigrationDone=false;
 const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const date=value=>value?new Intl.DateTimeFormat("he-IL",{dateStyle:"medium"}).format(new Date(`${value}T12:00:00`)):"";
 const hashCode=async value=>Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value)))).map(x=>x.toString(16).padStart(2,"0")).join("");
 const strongToken=()=>btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replaceAll("+","-").replaceAll("/","_").replaceAll("=","");
+const sevenDaysAfterEvent=value=>{if(!value)return null;const end=new Date(`${value}T23:59:59`);end.setDate(end.getDate()+7);return end};
+const formatBytes=value=>value<1024?`${value} B`:value<1048576?`${(value/1024).toFixed(1)} KB`:`${(value/1048576).toFixed(1)} MB`;
 
 export const startInvitationAdmin=()=>{
   if(started)return;started=true;
@@ -17,13 +19,15 @@ export const startInvitationAdmin=()=>{
   if(linkButton)linkButton.onclick=async()=>{linkButton.disabled=true;try{const token=strongToken(),id=await hashCode(token.toUpperCase()),expiresAt=new Date();expiresAt.setDate(expiresAt.getDate()+30);await setDoc(doc(db,"invitationAccess",id),{active:true,used:false,type:"personal-link",expiresAt,createdAt:serverTimestamp()});const url=`${location.origin}/digital-invitation.html?access=${encodeURIComponent(token)}`;codeResult.hidden=false;codeResult.innerHTML=`<b>הקישור האישי מוכן</b><p>הקישור תקף להזמנה אחת ולמשך 30 יום. שלח אותו ללקוח ב־WhatsApp:</p><p><a href="${url}" target="_blank" rel="noopener">${url}</a></p><button class="btn btn-primary" type="button">העתקת הקישור ללקוח</button>`;codeResult.querySelector("button").onclick=async()=>{await navigator.clipboard.writeText(`היי, זה הקישור האישי שלך להכנת ההזמנה הדיגיטלית:\n${url}`);codeResult.querySelector("button").textContent="הקישור הועתק ✓"}}catch(error){console.error(error);alert("לא הצלחנו ליצור קישור אישי.")}finally{linkButton.disabled=false}};
   if(codeButton)codeButton.onclick=async()=>{codeButton.disabled=true;try{const code=`AM-${crypto.getRandomValues(new Uint32Array(1))[0].toString().slice(0,6).padStart(6,"0")}`,id=await hashCode(code);await setDoc(doc(db,"invitationAccess",id),{active:true,used:false,createdAt:serverTimestamp()});const url=`${location.origin}/digital-invitation.html`;codeResult.hidden=false;codeResult.innerHTML=`<b>קוד חדש: <span>${code}</span></b><p>שלח ללקוח את הקוד ואת הקישור: <a href="${url}" target="_blank" rel="noopener">${url}</a></p><button class="btn" type="button">העתקת קוד וקישור</button>`;codeResult.querySelector("button").onclick=async()=>{await navigator.clipboard.writeText(`קוד להכנת ההזמנה: ${code}\n${url}`);codeResult.querySelector("button").textContent="הועתק ✓"}}catch(error){console.error(error);alert("לא הצלחנו ליצור קוד.")}finally{codeButton.disabled=false}};
   onSnapshot(query(collection(db,"invitations"),orderBy("createdAt","desc")),async snapshot=>{
-    items=await Promise.all(snapshot.docs.map(async entry=>{const responses=await getDocs(collection(db,"invitations",entry.id,"responses"));return{id:entry.id,...entry.data(),responses:responses.docs.map(x=>({id:x.id,...x.data()}))}}));render(list,stats)
+    items=await Promise.all(snapshot.docs.map(async entry=>{const responses=await getDocs(collection(db,"invitations",entry.id,"responses"));return{id:entry.id,...entry.data(),responses:responses.docs.map(x=>({id:x.id,...x.data()}))}}));render(list,stats);
+    if(!expiryMigrationDone){expiryMigrationDone=true;const changes=items.filter(item=>{const desired=sevenDaysAfterEvent(item.eventDate),current=item.expiresAt?.toDate?.();return desired&&(!current||current<desired)}).map(item=>updateDoc(doc(db,"invitations",item.id),{expiresAt:sevenDaysAfterEvent(item.eventDate)}));if(changes.length)Promise.all(changes).catch(console.error)}
   },error=>{console.error(error);list.innerHTML='<p class="empty">לא הצלחנו לטעון את ההזמנות.</p>'});
 };
 
 const render=(list,stats)=>{
   const active=items.filter(x=>x.status==="active"&&(!x.expiresAt?.toDate||x.expiresAt.toDate()>new Date())),yes=items.flatMap(x=>x.responses).filter(x=>x.response==="yes"),guests=yes.reduce((sum,x)=>sum+(Number(x.guestCount)||0),0);
   stats.innerHTML=`<span><small>הזמנות פעילות</small><b>${active.length}</b></span><span><small>אישורי הגעה</small><b>${yes.length}</b></span><span><small>משתתפים שאישרו</small><b>${guests}</b></span><span><small>כל ההזמנות</small><b>${items.length}</b></span>`;
+  const storage=document.querySelector("#invitation-storage"),used=items.reduce((sum,item)=>sum+new TextEncoder().encode(JSON.stringify(item)).length,0),reference=1024*1024*1024,percent=Math.min(100,used/reference*100);if(storage)storage.innerHTML=`<div><strong>אחסון ההזמנות והתמונות</strong><span>${formatBytes(used)} בשימוש · הערכה מתוך 1 GB</span></div><progress max="100" value="${percent}" aria-label="אחוז אחסון משוער"></progress><small>${percent>=80?'⚠️ האחסון המשוער עבר 80% — מומלץ לטפל בתמונות ישנות.':'המד הוא הערכה של מערכת ההזמנות בלבד. הנתון הרשמי נמצא בחשבון Firebase.'}</small>`;
   const filtered=items.filter(item=>{const haystack=[item.name,item.eventDate,date(item.eventDate),item.eventTime,item.venueName,item.location,item.address,item.id].join(" ").toLocaleLowerCase("he");return!searchText||haystack.includes(searchText)}),countLabel=document.querySelector("#invitation-search-count");
   if(countLabel)countLabel.textContent=searchText?`${filtered.length} מתוך ${items.length}`:`${items.length} הזמנות`;
   if(!items.length){list.innerHTML='<p class="empty">עדיין לא נוצרו הזמנות.</p>';return}
