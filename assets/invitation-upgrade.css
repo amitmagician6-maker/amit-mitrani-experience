@@ -23,3 +23,4 @@
 .preview-copy{width:100%}
 @media(max-width:760px){.builder,.builder>*{width:100%;min-width:0}.form-card input,.form-card textarea,.form-card select,.management-edit input,.management-edit textarea,.management-edit select{width:100%;max-width:100%}}
 @media(max-width:760px){.form-card input[type="radio"],.form-card input[type="checkbox"],.management-edit input[type="radio"],.management-edit input[type="checkbox"]{width:auto!important;max-width:none!important;flex:0 0 auto}.choice-row label{width:100%;min-width:0;grid-template-columns:auto 1fr}}
+.theme-celebration .invite-identity{border:1px solid rgba(255,235,155,.38);border-radius:24px;background:rgba(126,24,70,.94)}.theme-celebration .preview-copy,.theme-celebration .details span{background:rgba(126,24,70,.96)}
