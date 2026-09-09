@@ -41,6 +41,9 @@
           <label><input type="radio" name="theme" value="magic" checked><span class="magic">מודרני</span></label>
           <label><input type="radio" name="theme" value="celebration"><span class="celebration">חגיגי</span></label>
           <label><input type="radio" name="theme" value="elegant"><span class="elegant">יוקרתי</span></label>
+          <label><input type="radio" name="theme" value="rose"><span class="rose">ורוד / סגול</span></label>
+          <label><input type="radio" name="theme" value="ocean"><span class="ocean">כחול / טורקיז</span></label>
+          <label><input type="radio" name="theme" value="neutral"><span class="neutral">ניטרלי</span></label>
         </div>
         <label>תמונה אישית — לא חובה<input id="photo" type="file" accept="image/jpeg,image/png,image/webp"></label>
         <small class="privacy">התמונה נדחסת לפני השמירה ונמחקת יחד עם ההזמנה. אין צורך לפתוח חשבון.</small>
@@ -51,8 +54,9 @@
 
       <article class="preview theme-magic" id="preview">
         <div class="invite-decoration" aria-hidden="true"></div><div class="seal">הזמנה ליום הולדת</div>
+        <div class="invite-identity"><small>בואו לחגוג איתנו</small><h2 id="preview-name">האירוע שלכם</h2><p id="preview-age"></p></div>
         <div class="invite-photo"><img id="preview-photo" alt="" hidden><span class="photo-placeholder">🎉</span></div>
-        <div class="preview-copy"><small>בואו לחגוג איתנו</small><h2 id="preview-name">האירוע שלכם</h2><p id="preview-age"></p><p id="preview-message">מחכים לחגוג איתכם!</p></div>
+        <div class="preview-copy"><p id="preview-message">מחכים לחגוג איתכם!</p></div>
         <div class="details"><span><small>תאריך</small><b id="preview-date">לבחירתכם</b></span><span><small>שעה</small><b id="preview-time">17:00</b></span><span><small>מקום</small><b id="preview-venue">יעודכן כאן</b></span><span><small>כתובת</small><b id="preview-address">יעודכן כאן</b></span></div>
       </article>
     </section>
@@ -67,19 +71,19 @@
 
     <section class="guest" id="guest-view" hidden>
       <article class="preview guest-card" id="guest-card">
-        <div class="invite-decoration" aria-hidden="true"></div><div class="seal">הזמנה ליום הולדת</div><div class="invite-photo"><img id="guest-photo" alt="" hidden><span class="photo-placeholder">🎉</span></div>
-        <div class="preview-copy"><small>בואו לחגוג איתנו</small><h1 id="guest-name"></h1><p id="guest-age"></p><p id="guest-message"></p></div>
+        <div class="invite-decoration" aria-hidden="true"></div><div class="seal">הזמנה ליום הולדת</div><div class="invite-identity"><small>בואו לחגוג איתנו</small><h1 id="guest-name"></h1><p id="guest-age"></p></div><div class="invite-photo"><img id="guest-photo" alt="" hidden><span class="photo-placeholder">🎉</span></div>
+        <div class="preview-copy"><p id="guest-message"></p></div>
         <div class="details"><span><small>תאריך</small><b id="guest-date"></b></span><span><small>שעה</small><b id="guest-time"></b></span><span><small>מקום</small><b id="guest-venue"></b></span><span><small>כתובת</small><b id="guest-address"></b></span></div>
       </article>
-      <div class="guest-actions"><a id="navigate-waze" target="_blank" rel="noopener">ניווט ב־Waze</a><a id="navigate-google" target="_blank" rel="noopener">ניווט ב־Google Maps</a><button id="add-calendar" type="button">הוסף ליומן</button><button id="jump-rsvp" type="button">אישור הגעה</button><button id="guest-whatsapp" type="button">שיתוף ב־WhatsApp</button></div>
+      <div class="guest-actions"><button id="jump-rsvp" type="button">אישור הגעה</button><a id="navigate-waze" target="_blank" rel="noopener">ניווט ב־Waze</a><a id="navigate-google" target="_blank" rel="noopener">ניווט ב־Google Maps</a><button id="add-calendar" type="button">הוסף ליומן</button><button id="guest-whatsapp" type="button">שיתוף ב־WhatsApp</button></div>
       <form class="rsvp-card" id="rsvp-form"><h2>מאשרים הגעה</h2><label>שם מלא<input name="guestName" required maxlength="60"></label><label>טלפון של הורה / מלווה — לא חובה<input name="guardianPhone" type="tel" maxlength="30" inputmode="tel" autocomplete="tel"></label><div class="two"><label>מגיעים?<select name="response"><option value="yes">כן, בשמחה</option><option value="no">לצערי לא</option></select></label><label>כמה אנשים מגיעים?<input name="guestCount" type="number" min="1" max="20" value="1"></label></div><label>הערה — לא חובה<input name="note" maxlength="160"></label><button class="primary" type="submit">שליחת תשובה</button><p class="status" id="rsvp-status" role="status"></p><div class="post-rsvp" id="post-rsvp" hidden><span>רוצים גם יום הולדת עם עמית מיטרני?</span><a href="shows-for-kids.html">לפרטים על המופע</a></div></form>
       <footer class="invitation-brand">עמית מיטרני – קוסם ואמן חושים</footer>
     </section>
 
-    <section class="management" id="management-view" hidden><div class="management-head"><span>ניהול ההזמנה</span><h1 id="management-title">טוען…</h1><p id="management-summary"></p><div class="result-actions"><button class="whatsapp-primary" id="management-share" type="button">שליחה ב־WhatsApp</button><button id="management-copy" type="button">העתקת הקישור</button><button id="management-edit" type="button">עריכת ההזמנה</button></div></div><div class="management-stats" id="management-stats"></div><div class="management-responses" id="management-responses"><p>טוען אישורי הגעה…</p></div><form class="management-edit" id="management-edit-form" hidden><h2>עריכת ההזמנה</h2><div id="management-celebrants-list"></div><button class="secondary-action" id="management-add-celebrant" type="button">＋ הוסף חוגג/ת</button><div class="two"><label>תאריך<input name="eventDate" type="date" required></label><label>שעה<input name="eventTime" type="time" required></label></div><label>שם המקום<input name="venueName" required maxlength="80"></label><label>כתובת מלאה<input name="address" required maxlength="160"></label><label>הודעה אישית<textarea name="message" maxlength="500" rows="4"></textarea></label><div class="themes"><label><input type="radio" name="theme" value="magic"><span class="magic">מודרני</span></label><label><input type="radio" name="theme" value="celebration"><span class="celebration">חגיגי</span></label><label><input type="radio" name="theme" value="elegant"><span class="elegant">יוקרתי</span></label></div><label>החלפת תמונה — לא חובה<input id="management-photo" type="file" accept="image/jpeg,image/png,image/webp"></label><button class="primary" type="submit">שמירת השינויים</button><p class="status" id="management-edit-status"></p></form></section>
+    <section class="management" id="management-view" hidden><div class="management-head"><span>ניהול ההזמנה</span><h1 id="management-title">טוען…</h1><p id="management-summary"></p><div class="result-actions"><button class="whatsapp-primary" id="management-share" type="button">שליחה ב־WhatsApp</button><button id="management-copy" type="button">העתקת הקישור</button><button id="management-edit" type="button">עריכת ההזמנה</button></div></div><div class="management-stats" id="management-stats"></div><div class="management-responses" id="management-responses"><p>טוען אישורי הגעה…</p></div><form class="management-edit" id="management-edit-form" hidden><h2>עריכת ההזמנה</h2><div id="management-celebrants-list"></div><button class="secondary-action" id="management-add-celebrant" type="button">＋ הוסף חוגג/ת</button><div class="two"><label>תאריך<input name="eventDate" type="date" required></label><label>שעה<input name="eventTime" type="time" required></label></div><label>שם המקום<input name="venueName" required maxlength="80"></label><label>כתובת מלאה<input name="address" required maxlength="160"></label><label>הודעה אישית<textarea name="message" maxlength="500" rows="4"></textarea></label><div class="themes"><label><input type="radio" name="theme" value="magic"><span class="magic">מודרני</span></label><label><input type="radio" name="theme" value="celebration"><span class="celebration">חגיגי</span></label><label><input type="radio" name="theme" value="elegant"><span class="elegant">יוקרתי</span></label><label><input type="radio" name="theme" value="rose"><span class="rose">ורוד / סגול</span></label><label><input type="radio" name="theme" value="ocean"><span class="ocean">כחול / טורקיז</span></label><label><input type="radio" name="theme" value="neutral"><span class="neutral">ניטרלי</span></label></div><label>החלפת תמונה — לא חובה<input id="management-photo" type="file" accept="image/jpeg,image/png,image/webp"></label><button class="primary" type="submit">שמירת השינויים</button><p class="status" id="management-edit-status"></p></form></section>
 
     <section class="expired" id="expired-view" hidden><h1>האירוע כבר הסתיים</h1><p>ההזמנה אינה פעילה יותר. תודה שהייתם חלק מהחגיגה.</p><a href="./">לאתר של עמית מיטרני</a></section>
   </main>
-  <script type="module" src="assets/invitation.js?v=8"></script>
+  <script type="module" src="assets/invitation.js?v=9"></script>
 </body>
 </html>

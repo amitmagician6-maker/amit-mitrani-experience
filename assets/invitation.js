@@ -8,7 +8,8 @@ const suppliedAccessToken=params.get("access"),personalAccessToken=suppliedAcces
 if(suppliedAccessToken){sessionStorage.setItem("invitationAccessToken",suppliedAccessToken);history.replaceState(null,"",location.pathname)}
 const safe=v=>String(v||"").trim(),formatDate=v=>v?new Intl.DateTimeFormat("he-IL",{dateStyle:"long"}).format(new Date(`${v}T12:00:00`)):"לבחירתכם";
 const esc=v=>safe(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
-const setTheme=(el,theme)=>{el.classList.remove("theme-magic","theme-celebration","theme-elegant");el.classList.add(`theme-${theme||"magic"}`)};
+const themeNames=["magic","celebration","elegant","rose","ocean","neutral"];
+const setTheme=(el,theme)=>{el.classList.remove(...themeNames.map(name=>`theme-${name}`));el.classList.add(`theme-${themeNames.includes(theme)?theme:"magic"}`)};
 const stopPageLoading=()=>document.documentElement.classList.remove("invitation-loading");
 const hashCode=async value=>Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(safe(value).toUpperCase())))).map(x=>x.toString(16).padStart(2,"0")).join("");
 const strongToken=()=>btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replaceAll("+","-").replaceAll("/","_").replaceAll("=","");

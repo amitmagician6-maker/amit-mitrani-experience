@@ -125,7 +125,7 @@ service cloud.firestore {
       && request.resource.data.location.size() <= 250
       && request.resource.data.message is string
       && request.resource.data.message.size() <= 500
-      && request.resource.data.theme in ['magic', 'celebration', 'elegant']
+      && request.resource.data.theme in ['magic', 'celebration', 'elegant', 'rose', 'ocean', 'neutral']
       && request.resource.data.photoData is string
       && request.resource.data.photoData.size() <= 430000
       && request.resource.data.status == 'active'
@@ -209,7 +209,7 @@ service cloud.firestore {
           && request.resource.data.payload.venueName is string && request.resource.data.payload.venueName.size() <= 80
           && request.resource.data.payload.address is string && request.resource.data.payload.address.size() <= 160
           && request.resource.data.payload.message is string && request.resource.data.payload.message.size() <= 500
-          && request.resource.data.payload.theme in ['magic', 'celebration', 'elegant']
+          && request.resource.data.payload.theme in ['magic', 'celebration', 'elegant', 'rose', 'ocean', 'neutral']
           && request.resource.data.payload.photoData is string && request.resource.data.payload.photoData.size() <= 430000
         ))
         && request.resource.data.createdAt == request.time;
