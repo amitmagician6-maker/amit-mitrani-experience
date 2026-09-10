@@ -618,11 +618,18 @@
     }
     .illusion-count::after { content: "שניות"; color: var(--muted); font-size: 12px; font-weight: 700; }
     .illusion-target {
-      display: grid;
+      display: none;
       gap: 12px;
       justify-items: center;
       color: #ddd6e6;
+      opacity: 0;
+    }
+    .illusion-stage.revealed .illusion-disc-wrap { display: none; }
+    .illusion-stage.revealed .illusion-target {
+      display: grid;
+      grid-column: 1 / -1;
       opacity: 1;
+      animation: reveal .55s cubic-bezier(.2,.8,.2,1) both;
     }
     .illusion-target img {
       width: min(230px, 100%);
@@ -1304,7 +1311,7 @@
               </div>
               <div class="effect-status" id="illusion-status" aria-live="polite"></div>
             </div>
-            <div class="illusion-stage">
+            <div class="illusion-stage" id="illusion-stage">
               <div class="illusion-disc-wrap" aria-hidden="true">
                 <div class="illusion-disc" id="illusion-disc">
                   <svg viewBox="0 0 300 300" role="img" aria-label="ספירלה שחורה ולבנה מסתובבת">
@@ -1822,6 +1829,7 @@
     const illusionStart = document.querySelector("#illusion-start");
     const illusionStatus = document.querySelector("#illusion-status");
     const illusionTarget = document.querySelector("#illusion-target");
+    const illusionStage = document.querySelector("#illusion-stage");
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let illusionFrame;
     let illusionStartedAt = 0;
@@ -1850,6 +1858,7 @@
       }
       illusionCount.textContent = "15";
       illusionTarget.classList.remove("reveal");
+      illusionStage.classList.remove("revealed");
       illusionDisc.classList.add("running", "motion-approved");
       illusionStart.disabled = false;
       illusionStart.textContent = "לעצור את האשליה";
@@ -1867,6 +1876,7 @@
         stopIllusion();
         illusionCount.textContent = "0";
         illusionTarget.classList.add("reveal");
+        illusionStage.classList.add("revealed");
         illusionStatus.textContent = "עכשיו הביטו מיד בפנים של עמית. האם הן משנות גודל?";
         illusionStart.textContent = "לעשות את זה שוב";
       };
