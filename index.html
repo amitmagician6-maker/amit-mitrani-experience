@@ -636,6 +636,16 @@
     .illusion-note { display: block; margin: 12px 0 16px; color: #aeb7c8; font-size: 12px; line-height: 1.55; }
     .illusion-controls { display: flex; flex-wrap: wrap; gap: 9px; }
     .illusion-controls .btn { min-width: 0; }
+    .afterimage-stage { min-height: 390px; display: grid; align-content: center; justify-items: center; gap: 14px; text-align: center; }
+    .afterimage-frame { position: relative; width: min(290px, 70vw); aspect-ratio: 1; overflow: hidden; border: 3px solid rgba(255,255,255,.82); border-radius: 24px; background: #11142d; box-shadow: 0 22px 55px rgba(0,0,0,.42); }
+    .afterimage-frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .afterimage-frame.negative img { filter: invert(1) saturate(1.35) contrast(1.08); }
+    .afterimage-frame.grayscale img { filter: grayscale(1); }
+    .afterimage-focus { position: absolute; left: 50%; top: 43%; width: 9px; height: 9px; border: 2px solid #111; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,.7),0 0 12px rgba(0,0,0,.75); transform: translate(-50%,-50%); }
+    .afterimage-count { min-height: 36px; color: var(--gold); font-size: 26px; font-weight: 900; }
+    .afterimage-message { min-height: 50px; max-width: 330px; margin: 0; color: #ddd6e6; font-weight: 800; line-height: 1.55; }
+    .afterimage-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 9px; }
+    @media (prefers-reduced-motion: reduce) { .afterimage-frame, .afterimage-frame img { transition: none !important; animation: none !important; } }
     .object-stage { min-height: 390px; display: grid; align-content: center; gap: 18px; }
     .object-grid { display: grid; grid-template-columns: repeat(4, minmax(76px, 1fr)); gap: 10px; direction: rtl; }
     .object-grid[hidden] { display: none; }
@@ -1234,6 +1244,7 @@
             <button class="magic-tab active" type="button" aria-pressed="true" data-trick="cards">קלף נעלם</button>
             <button class="magic-tab" type="button" aria-pressed="false" data-trick="number">קריאת מספר</button>
             <button class="magic-tab" type="button" aria-pressed="false" data-trick="illusion">אשליית ראייה</button>
+            <button class="magic-tab" type="button" aria-pressed="false" data-trick="afterimage">צבע שלא קיים</button>
             <button class="magic-tab" type="button" aria-pressed="false" data-trick="object">חפץ במחשבה</button>
           </div>
         </div>
@@ -1321,9 +1332,31 @@
             </div>
           </div>
 
-          <div class="trick-panel" data-panel="object">
+          <div class="trick-panel" data-panel="afterimage">
             <div class="trick-copy">
               <span class="trick-step">חוויה רביעית</span>
+              <h3>אני אגרום לכם לראות צבע שלא קיים</h3>
+              <p>הביטו בנקודה שבמרכז הפנים. בעוד רגע המוח שלכם ישלים צבע שאינו נמצא בתמונה.</p>
+              <button class="btn btn-gold trick-action" id="afterimage-start" type="button">התחל</button>
+              <div class="effect-status" id="afterimage-status" aria-live="polite"></div>
+            </div>
+            <div class="afterimage-stage">
+              <div class="afterimage-frame" id="afterimage-frame">
+                <img src="assets/optimized/amit-illusion-portrait-v2.webp" alt="פורטרט של עמית מיטרני לניסוי תפיסת צבע" loading="lazy" width="720" height="720">
+                <i class="afterimage-focus" id="afterimage-focus" hidden aria-hidden="true"></i>
+              </div>
+              <div class="afterimage-count" id="afterimage-count" aria-live="polite"></div>
+              <p class="afterimage-message" id="afterimage-message">לחצו על התחלה והביטו רק בנקודה.</p>
+              <div class="afterimage-actions" id="afterimage-actions" hidden>
+                <button class="btn btn-gold" id="afterimage-again" type="button">לנסות שוב</button>
+                <button class="btn btn-dark" id="afterimage-share" type="button">תנו לחבר לנסות</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="trick-panel" data-panel="object">
+            <div class="trick-copy">
+              <span class="trick-step">חוויה חמישית</span>
               <h3>עמית ימצא את החפץ שבחרתם</h3>
               <p id="object-copy">בחרו חפץ אחד מהרשימה בעיניים בלבד. אל תלחצו עליו ואל תגידו את שמו. כשתהיו מוכנים, ענו על ארבע שאלות קצרות.</p>
               <button class="btn btn-gold trick-action" id="object-start" type="button">בחרתי חפץ במחשבה</button>
@@ -1873,6 +1906,60 @@
         illusionStart.textContent = "לעשות את זה שוב";
       };
       illusionFrame = window.requestAnimationFrame(updateIllusionCountdown);
+    });
+
+    const afterimageFrame = document.querySelector("#afterimage-frame");
+    const afterimageFocus = document.querySelector("#afterimage-focus");
+    const afterimageCount = document.querySelector("#afterimage-count");
+    const afterimageMessage = document.querySelector("#afterimage-message");
+    const afterimageActions = document.querySelector("#afterimage-actions");
+    const afterimageStart = document.querySelector("#afterimage-start");
+    const afterimageStatus = document.querySelector("#afterimage-status");
+    let afterimageFrameRequest;
+    let afterimageRevealTimer;
+    const resetAfterimage = () => {
+      window.cancelAnimationFrame(afterimageFrameRequest);
+      window.clearTimeout(afterimageRevealTimer);
+      afterimageFrame.classList.remove("negative", "grayscale");
+      afterimageFocus.hidden = true;
+      afterimageCount.textContent = "";
+      afterimageMessage.textContent = "לחצו על התחלה והביטו רק בנקודה.";
+      afterimageActions.hidden = true;
+      afterimageStart.hidden = false;
+      afterimageStart.disabled = false;
+      afterimageStatus.textContent = "";
+    };
+    const runAfterimage = () => {
+      resetAfterimage();
+      afterimageStart.hidden = true;
+      afterimageFrame.classList.add("negative");
+      afterimageFocus.hidden = false;
+      afterimageMessage.textContent = "הביטו רק בנקודה. אל תזיזו את המבט.";
+      afterimageStatus.textContent = "הניסוי התחיל.";
+      const startedAt = performance.now();
+      const tick = () => {
+        const elapsed = (performance.now() - startedAt) / 1000;
+        afterimageCount.textContent = `${Math.max(0, Math.ceil(15 - elapsed))} שניות`;
+        if (elapsed < 15) { afterimageFrameRequest = window.requestAnimationFrame(tick); return; }
+        afterimageFrame.classList.remove("negative");
+        afterimageFrame.classList.add("grayscale");
+        afterimageCount.textContent = "";
+        afterimageMessage.textContent = "אל תזיזו את המבט...";
+        afterimageRevealTimer = window.setTimeout(() => {
+          afterimageFocus.hidden = true;
+          afterimageMessage.textContent = "התמונה בשחור־לבן. ראיתם צבע? הצבע היה רק אצלכם בראש.";
+          afterimageActions.hidden = false;
+          afterimageStatus.textContent = "";
+        }, reducedMotion.matches ? 1200 : 3000);
+      };
+      afterimageFrameRequest = window.requestAnimationFrame(tick);
+    };
+    afterimageStart.addEventListener("click", runAfterimage);
+    document.querySelector("#afterimage-again").addEventListener("click", runAfterimage);
+    document.querySelector("#afterimage-share").addEventListener("click", async () => {
+      const shareData = { title: "קסם אינטראקטיבי עם עמית מיטרני", text: "נסו לראות צבע שלא קיים — ישירות באתר של עמית מיטרני.", url: `${location.origin}${location.pathname}#magic` };
+      if (navigator.share) { try { await navigator.share(shareData); } catch (error) { return; } }
+      else location.href = `https://wa.me/?text=${encodeURIComponent(`${shareData.text}\n${shareData.url}`)}`;
     });
 
     const objectChoices = [
