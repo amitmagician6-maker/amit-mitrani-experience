@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
   <script>if(new URLSearchParams(location.search).has('id')||location.hash.startsWith('#manage='))document.documentElement.classList.add('invitation-loading')</script>
   <link rel="stylesheet" href="assets/invitation.css?v=3">
-  <link rel="stylesheet" href="assets/invitation-upgrade.css?v=8">
+  <link rel="stylesheet" href="assets/invitation-upgrade.css?v=9">
   <style>[hidden]{display:none!important}body{overflow-x:hidden}.details span:has(#guest-address:empty){display:none}</style>
 </head>
 <body><!-- Google Tag Manager (noscript) --><noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-M7H725PC" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript><!-- End Google Tag Manager (noscript) -->
@@ -77,6 +77,7 @@
       </article>
       <div class="guest-actions"><button id="jump-rsvp" type="button">אישור הגעה</button><a id="navigate-waze" target="_blank" rel="noopener">ניווט ב־Waze</a><a id="navigate-google" target="_blank" rel="noopener">ניווט ב־Google Maps</a><button id="add-calendar" type="button">הוסף ליומן</button><button id="guest-whatsapp" type="button">שיתוף ב־WhatsApp</button></div>
       <form class="rsvp-card" id="rsvp-form"><h2>מאשרים הגעה</h2><label>שם מלא<input name="guestName" required maxlength="60"></label><label>טלפון של הורה / מלווה — לא חובה<input name="guardianPhone" type="tel" maxlength="30" inputmode="tel" autocomplete="tel"></label><div class="two"><label>מגיעים?<select name="response"><option value="yes">כן, בשמחה</option><option value="no">לצערי לא</option></select></label><label>כמה אנשים מגיעים?<input name="guestCount" type="number" min="1" max="20" value="1"></label></div><label>הערה — לא חובה<input name="note" maxlength="160"></label><button class="primary" type="submit">שליחת תשובה</button><p class="status" id="rsvp-status" role="status"></p><div class="post-rsvp" id="post-rsvp" hidden><span>רוצים גם יום הולדת עם עמית מיטרני?</span><a href="shows-for-kids.html">לפרטים על המופע</a></div></form>
+      <aside class="invitation-magic-teaser"><span aria-hidden="true">✨</span><div><h2>הקסם מתחיל כבר עכשיו</h2><p>מוכנים להפתעה קטנה לפני האירוע?</p></div><a href="index.html#magic">לנסות קסם אינטראקטיבי</a></aside>
       <footer class="invitation-brand">עמית מיטרני – קוסם ואמן חושים</footer>
     </section>
 
