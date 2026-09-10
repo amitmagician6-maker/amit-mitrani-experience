@@ -646,6 +646,21 @@
     .afterimage-message { min-height: 50px; max-width: 330px; margin: 0; color: #ddd6e6; font-weight: 800; line-height: 1.55; }
     .afterimage-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 9px; }
     @media (prefers-reduced-motion: reduce) { .afterimage-frame, .afterimage-frame img { transition: none !important; animation: none !important; } }
+    .vanishing-stage { min-height: 390px; display: grid; align-content: center; justify-items: center; gap: 16px; text-align: center; }
+    .vanishing-vision { width: min(540px, 100%); display: grid; grid-template-columns: minmax(0,1fr) 34px minmax(0,1fr); align-items: center; gap: 10px; direction: ltr; }
+    .vanishing-face { width: 100%; aspect-ratio: 1; object-fit: cover; border: 2px solid rgba(255,255,255,.35); border-radius: 22px; box-shadow: 0 16px 40px rgba(0,0,0,.32); backface-visibility: hidden; }
+    .vanishing-focus { width: 13px; height: 13px; justify-self: center; border: 2px solid #090811; border-radius: 50%; background: #fff; box-shadow: 0 0 0 3px var(--gold),0 0 20px rgba(237,192,105,.55); }
+    .vanishing-vision.running .vanishing-face:first-child { animation: peripheralFadeLeft 18s linear forwards; }
+    .vanishing-vision.running .vanishing-face:last-child { animation: peripheralFadeRight 18s linear forwards; }
+    .vanishing-vision.running.reduced .vanishing-face:first-child,
+    .vanishing-vision.running.reduced .vanishing-face:last-child { animation-name: peripheralFadeReduced; }
+    @keyframes peripheralFadeLeft { 0%,14% { opacity:1; filter:none } 55% { opacity:.72; filter:contrast(.9) brightness(1.08) blur(.5px) } 100% { opacity:.28; filter:contrast(.72) brightness(1.22) blur(2.2px) grayscale(.22) } }
+    @keyframes peripheralFadeRight { 0%,17% { opacity:1; filter:none } 58% { opacity:.76; filter:contrast(.92) brightness(1.05) blur(.4px) } 100% { opacity:.34; filter:contrast(.76) brightness(1.18) blur(1.8px) grayscale(.18) } }
+    @keyframes peripheralFadeReduced { 0%,14% { opacity:1; filter:none } 100% { opacity:.38; filter:contrast(.78) brightness(1.15) grayscale(.18) } }
+    .vanishing-count { min-height: 34px; color:var(--gold); font-size:24px; font-weight:900; }
+    .vanishing-message { min-height: 52px; max-width: 390px; margin:0; color:#ddd6e6; font-weight:800; line-height:1.55; white-space:pre-line; }
+    .vanishing-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:9px; }
+    @media(max-width:520px){.vanishing-vision{grid-template-columns:minmax(0,1fr) 26px minmax(0,1fr);gap:7px}.vanishing-face{border-radius:16px}.vanishing-focus{width:11px;height:11px}.vanishing-stage{min-height:350px}}
     .object-stage { min-height: 390px; display: grid; align-content: center; gap: 18px; }
     .object-grid { display: grid; grid-template-columns: repeat(4, minmax(76px, 1fr)); gap: 10px; direction: rtl; }
     .object-grid[hidden] { display: none; }
@@ -1245,6 +1260,7 @@
             <button class="magic-tab" type="button" aria-pressed="false" data-trick="number">קריאת מספר</button>
             <button class="magic-tab" type="button" aria-pressed="false" data-trick="illusion">אשליית ראייה</button>
             <button class="magic-tab" type="button" aria-pressed="false" data-trick="afterimage">צבע שלא קיים</button>
+            <button class="magic-tab" type="button" aria-pressed="false" data-trick="vanishing">הפנים שנעלמות</button>
             <button class="magic-tab" type="button" aria-pressed="false" data-trick="object">חפץ במחשבה</button>
           </div>
         </div>
@@ -1354,9 +1370,32 @@
             </div>
           </div>
 
-          <div class="trick-panel" data-panel="object">
+          <div class="trick-panel" data-panel="vanishing">
             <div class="trick-copy">
               <span class="trick-step">חוויה חמישית</span>
+              <h3>הפנים שנעלמות</h3>
+              <p>הסתכלו רק על הנקודה במרכז.<br>אל תזיזו את העיניים.</p>
+              <button class="btn btn-gold trick-action" id="vanishing-start" type="button">התחל</button>
+              <div class="effect-status" id="vanishing-status" aria-live="polite"></div>
+            </div>
+            <div class="vanishing-stage">
+              <div class="vanishing-vision" id="vanishing-vision">
+                <img class="vanishing-face" src="assets/optimized/amit-illusion-portrait-v2.webp" alt="פניו של עמית משמאל לנקודת המיקוד" loading="lazy" width="720" height="720">
+                <i class="vanishing-focus" aria-label="נקודת המיקוד במרכז"></i>
+                <img class="vanishing-face" src="assets/optimized/amit-illusion-portrait-v2.webp" alt="פניו של עמית מימין לנקודת המיקוד" loading="lazy" width="720" height="720">
+              </div>
+              <div class="vanishing-count" id="vanishing-count" aria-live="polite"></div>
+              <p class="vanishing-message" id="vanishing-message">לחצו על התחלה והשאירו את המבט בנקודה בלבד.</p>
+              <div class="vanishing-actions" id="vanishing-actions" hidden>
+                <button class="btn btn-gold" id="vanishing-again" type="button">לנסות שוב</button>
+                <button class="btn btn-dark" id="vanishing-share" type="button">תנו לחבר לנסות</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="trick-panel" data-panel="object">
+            <div class="trick-copy">
+              <span class="trick-step">חוויה שישית</span>
               <h3>עמית ימצא את החפץ שבחרתם</h3>
               <p id="object-copy">בחרו חפץ אחד מהרשימה בעיניים בלבד. אל תלחצו עליו ואל תגידו את שמו. כשתהיו מוכנים, ענו על ארבע שאלות קצרות.</p>
               <button class="btn btn-gold trick-action" id="object-start" type="button">בחרתי חפץ במחשבה</button>
@@ -1958,6 +1997,55 @@
     document.querySelector("#afterimage-again").addEventListener("click", runAfterimage);
     document.querySelector("#afterimage-share").addEventListener("click", async () => {
       const shareData = { title: "קסם אינטראקטיבי עם עמית מיטרני", text: "נסו לראות צבע שלא קיים — ישירות באתר של עמית מיטרני.", url: `${location.origin}${location.pathname}#magic` };
+      if (navigator.share) { try { await navigator.share(shareData); } catch (error) { return; } }
+      else location.href = `https://wa.me/?text=${encodeURIComponent(`${shareData.text}\n${shareData.url}`)}`;
+    });
+
+    const vanishingVision = document.querySelector("#vanishing-vision");
+    const vanishingCount = document.querySelector("#vanishing-count");
+    const vanishingMessage = document.querySelector("#vanishing-message");
+    const vanishingActions = document.querySelector("#vanishing-actions");
+    const vanishingStart = document.querySelector("#vanishing-start");
+    const vanishingStatus = document.querySelector("#vanishing-status");
+    let vanishingFrameRequest;
+    let vanishingRevealTimer;
+    const resetVanishing = () => {
+      window.cancelAnimationFrame(vanishingFrameRequest);
+      window.clearTimeout(vanishingRevealTimer);
+      vanishingVision.classList.remove("running", "reduced");
+      vanishingCount.textContent = "";
+      vanishingMessage.textContent = "לחצו על התחלה והשאירו את המבט בנקודה בלבד.";
+      vanishingActions.hidden = true;
+      vanishingStart.hidden = false;
+      vanishingStatus.textContent = "";
+    };
+    const runVanishing = () => {
+      resetVanishing();
+      void vanishingVision.offsetWidth;
+      if (reducedMotion.matches) vanishingVision.classList.add("reduced");
+      vanishingVision.classList.add("running");
+      vanishingStart.hidden = true;
+      vanishingMessage.textContent = "הסתכלו רק על הנקודה במרכז.\nאל תזיזו את העיניים.";
+      vanishingStatus.textContent = reducedMotion.matches ? "האפקט פועל ללא טשטוש בהתאם להגדרת המכשיר." : "השאירו את המבט במרכז.";
+      const startedAt = performance.now();
+      const tick = () => {
+        const elapsed = (performance.now() - startedAt) / 1000;
+        vanishingCount.textContent = `${Math.max(0, Math.ceil(18 - elapsed))} שניות`;
+        if (elapsed < 18) { vanishingFrameRequest = window.requestAnimationFrame(tick); return; }
+        vanishingCount.textContent = "";
+        vanishingMessage.textContent = "עדיין הסתכלתם על הנקודה?";
+        vanishingRevealTimer = window.setTimeout(() => {
+          vanishingMessage.textContent = "אז למה הפנים שלי התחילו להשתנות? 😈";
+          vanishingActions.hidden = false;
+          vanishingStatus.textContent = "";
+        }, reducedMotion.matches ? 1200 : 2600);
+      };
+      vanishingFrameRequest = window.requestAnimationFrame(tick);
+    };
+    vanishingStart.addEventListener("click", runVanishing);
+    document.querySelector("#vanishing-again").addEventListener("click", runVanishing);
+    document.querySelector("#vanishing-share").addEventListener("click", async () => {
+      const shareData = { title: "הפנים שנעלמות", text: "האם תוכלו להסתכל בנקודה בלי שהפנים יתחילו להיעלם?", url: `${location.origin}${location.pathname}#magic` };
       if (navigator.share) { try { await navigator.share(shareData); } catch (error) { return; } }
       else location.href = `https://wa.me/?text=${encodeURIComponent(`${shareData.text}\n${shareData.url}`)}`;
     });
