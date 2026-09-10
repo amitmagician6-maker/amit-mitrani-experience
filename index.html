@@ -587,7 +587,7 @@
       justify-content: center;
       text-align: center;
     }
-    .illusion-disc-wrap { position: relative; display: grid; place-items: center; }
+    .illusion-disc-wrap { display: grid; gap: 14px; place-items: center; }
     .illusion-disc {
       width: min(250px, 62vw);
       aspect-ratio: 1;
@@ -598,21 +598,25 @@
       box-shadow: 0 0 0 2px #111, 0 0 46px rgba(255,255,255,.18);
       transform: translateZ(0);
     }
-    .illusion-disc video { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .illusion-disc svg { display: block; width: 100%; height: 100%; }
+    .illusion-disc.running svg { animation: illusionSpin .72s linear infinite; }
+    @keyframes illusionSpin { to { transform: rotate(360deg); } }
     .illusion-count {
-      position: absolute;
-      display: grid;
-      place-items: center;
-      width: 76px;
-      height: 76px;
-      border: 2px solid rgba(255,255,255,.78);
-      border-radius: 50%;
-      color: #17111d;
-      background: rgba(255,249,231,.93);
-      box-shadow: 0 12px 35px rgba(0,0,0,.35);
-      font-size: 28px;
+      display: inline-flex;
+      align-items: baseline;
+      gap: 7px;
+      min-width: 112px;
+      justify-content: center;
+      padding: 8px 16px;
+      border: 1px solid rgba(237,192,105,.45);
+      border-radius: 999px;
+      color: var(--white);
+      background: rgba(17,14,24,.92);
+      box-shadow: 0 10px 28px rgba(0,0,0,.25);
+      font-size: 24px;
       font-weight: 900;
     }
+    .illusion-count::after { content: "שניות"; color: var(--muted); font-size: 12px; font-weight: 700; }
     .illusion-target {
       display: grid;
       gap: 12px;
@@ -621,12 +625,12 @@
       opacity: 1;
     }
     .illusion-target img {
-      width: 168px;
-      aspect-ratio: 1;
+      width: min(230px, 100%);
+      aspect-ratio: 4 / 3;
       object-fit: cover;
-      object-position: 50% 22%;
+      object-position: 50% 28%;
       border: 1px solid rgba(237,192,105,.4);
-      border-radius: 50%;
+      border-radius: 22px;
       box-shadow: 0 18px 45px rgba(0,0,0,.42);
     }
     .illusion-note { display: block; margin: 12px 0 16px; color: #aeb7c8; font-size: 12px; line-height: 1.55; }
@@ -825,7 +829,7 @@
       .trick-action { width: 100%; }
       .card-table, .number-stage, .illusion-stage, .object-stage { min-height: 350px; }
       .illusion-stage { grid-template-columns: 1fr; gap: 18px; }
-      .illusion-target img { width: 126px; }
+      .illusion-target img { width: min(260px, 82vw); }
       .illusion-controls, .magic-footer-actions { display: grid; grid-template-columns: 1fr; }
       .object-grid { grid-template-columns: repeat(3, minmax(70px, 1fr)); }
       .card-deck { grid-template-columns: repeat(3, 78px); gap: 11px; }
@@ -1303,9 +1307,11 @@
             <div class="illusion-stage">
               <div class="illusion-disc-wrap" aria-hidden="true">
                 <div class="illusion-disc" id="illusion-disc">
-                  <video id="illusion-wheel-video" muted playsinline preload="none" poster="assets/optimized/illusion-wheel-reference-poster.webp">
-                    <source src="assets/optimized/illusion-wheel-reference-15s.mp4" type="video/mp4">
-                  </video>
+                  <svg viewBox="0 0 300 300" role="img" aria-label="ספירלה שחורה ולבנה מסתובבת">
+                    <circle cx="150" cy="150" r="148" fill="#111"/>
+                    <path d="M150.0,150.0 L151.2,150.6 L151.6,152.2 L150.5,154.1 L148.1,155.1 L145.0,154.6 L142.1,152.1 L140.7,147.9 L141.6,143.0 L145.3,138.6 L151.2,136.4 L158.1,137.3 L164.2,141.8 L167.8,149.2 L167.4,158.1 L162.5,166.3 L153.8,171.6 L143.0,172.2 L132.6,167.4 L125.2,157.8 L123.1,145.2 L127.2,132.5 L137.3,122.7 L151.4,118.6 L166.4,121.6 L178.9,131.6 L185.4,146.9 L184.1,164.2 L174.6,179.4 L158.5,188.7 L139.3,189.6 L121.3,181.2 L108.8,164.9 L105.2,144.1 L111.9,123.3 L127.9,107.5 L150.1,100.8 L173.4,105.1 L192.6,120.2 L202.9,143.1 L201.4,168.8 L187.8,191.4 L164.8,205.5 L137.2,207.4 L111.2,196.1 L93.1,173.5 L87.3,144.4 L95.8,115.4 L117.3,93.1 L147.2,83.0 L179.0,88.1 L205.4,107.6 L220.1,137.8 L219.1,171.9 L202.1,202.3 L172.5,221.8 L136.6,225.4 L102.4,211.8 L78.0,183.4 L69.4,146.3 L79.0,108.8 L105.3,79.5 L142.8,65.5 L183.2,70.4 L217.2,93.9 L236.9,130.9 L237.2,173.6 L217.4,212.1 L181.6,237.5 L137.5,243.6 L94.9,228.3 L63.7,194.6 L51.5,149.8 L61.5,103.7 L92.1,66.9 L136.9,48.2 L185.8,52.4 L227.9,79.0 L253.1,122.7 L255.4,173.7 L233.6,220.6 L192.1,252.5 L139.9,261.7 L88.7,245.6 L50.3,207.2 L33.8,154.7 L43.5,100.0 L77.8,55.4 L129.5,31.4 L187.0,34.0 L237.3,63.2 L268.8,112.9 L273.9,172.2 L250.7,227.8 L204.0,266.7 L143.9,279.8" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/>
+                    <circle cx="150" cy="150" r="3.5" fill="#fff"/>
+                  </svg>
                 </div>
                 <div class="illusion-count" id="illusion-count">15</div>
               </div>
@@ -1812,17 +1818,15 @@
     });
 
     const illusionDisc = document.querySelector("#illusion-disc");
-    const illusionVideo = document.querySelector("#illusion-wheel-video");
     const illusionCount = document.querySelector("#illusion-count");
     const illusionStart = document.querySelector("#illusion-start");
     const illusionStatus = document.querySelector("#illusion-status");
     const illusionTarget = document.querySelector("#illusion-target");
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let illusionFrame;
-    const stopIllusion = (resetVideo = true) => {
+    let illusionStartedAt = 0;
+    const stopIllusion = () => {
       window.cancelAnimationFrame(illusionFrame);
-      illusionVideo.pause();
-      if (resetVideo) illusionVideo.currentTime = 0;
       illusionDisc.classList.remove("running", "motion-approved");
       illusionStart.disabled = false;
     };
@@ -1851,23 +1855,16 @@
       illusionStart.textContent = "לעצור את האשליה";
       illusionStatus.textContent = "הביטו רק בנקודה שבמרכז. אפשר לעצור בכל רגע אם לא נוח.";
       playMagicTone(260, .18);
-      illusionVideo.currentTime = 0;
-      try {
-        await illusionVideo.play();
-      } catch (error) {
-        stopIllusion();
-        illusionStatus.textContent = "לא הצלחנו להפעיל את הגלגל. נסו שוב.";
-        illusionStart.textContent = "לנסות שוב";
-        return;
-      }
+      illusionStartedAt = performance.now();
       const updateIllusionCountdown = () => {
-        const secondsLeft = Math.max(0, Math.ceil(15 - illusionVideo.currentTime));
+        const elapsed = (performance.now() - illusionStartedAt) / 1000;
+        const secondsLeft = Math.max(0, Math.ceil(15 - elapsed));
         illusionCount.textContent = String(secondsLeft);
-        if (!illusionVideo.ended && illusionVideo.currentTime < 14.95) {
+        if (elapsed < 15) {
           illusionFrame = window.requestAnimationFrame(updateIllusionCountdown);
           return;
         }
-        stopIllusion(false);
+        stopIllusion();
         illusionCount.textContent = "0";
         illusionTarget.classList.add("reveal");
         illusionStatus.textContent = "עכשיו הביטו מיד בפנים של עמית. האם הן משנות גודל?";
