@@ -15,6 +15,9 @@
   const source = trim(params.get("utm_source") || (params.has("gclid") ? "Google Ads" : params.has("fbclid") ? "Meta Ads" : params.has("ttclid") ? "TikTok Ads" : referrerHost || "Direct"), 100);
   const medium = trim(params.get("utm_medium") || (params.has("gclid") ? "cpc" : params.has("fbclid") || params.has("ttclid") ? "paid_social" : referrerHost ? "referral" : "none"), 100);
   let firestorePromise;
+  const recentEvents = new Map();
+  const startedForms = new WeakSet();
+  const seenIframeVideos = new Set();
 
   const videoIdFromUrl = (value) => {
     try {
@@ -54,12 +57,17 @@
     }
   };
 
-  const send = (name, parameters = {}) => {
+  const send = (name, parameters = {}, dedupeKey = "") => {
+    const now = Date.now();
+    const key = `${name}:${dedupeKey || pagePath}`;
+    if (now - (recentEvents.get(key) || 0) < 1000) return false;
+    recentEvents.set(key, now);
     window.gtag("event", name, {
-      page_location: window.location.href,
+      page_path: pagePath,
       page_title: document.title,
       ...parameters
     });
+    return true;
   };
 
   writeAggregateEvent("page_view");
@@ -68,20 +76,37 @@
     const link = event.target.closest("a[href]");
     if (!link) return;
     const href = link.getAttribute("href") || "";
+    const linkDomain = (() => {
+      try { return new URL(link.href, location.href).hostname.replace(/^www\./, ""); } catch { return ""; }
+    })();
+    const buttonLocation = trim(link.closest("header,nav,main,section,footer,dialog")?.tagName.toLowerCase() || "page", 40);
 
     if (/^(?:https?:\/\/)?(?:wa\.me|api\.whatsapp\.com|web\.whatsapp\.com)/i.test(href)) {
-      send("whatsapp_click", { link_url: link.href, link_text: link.textContent.trim().slice(0, 100) });
-      writeAggregateEvent("whatsapp_click", { target: "whatsapp", targetLabel: link.textContent });
+      const name = link.id === "order-whatsapp" ? "booking_whatsapp_click" : "whatsapp_click";
+      if (send(name, { link_domain: linkDomain, button_location: buttonLocation, event_category: "lead" }, link.id || linkDomain)) {
+        writeAggregateEvent(name, { target: "whatsapp", targetLabel: buttonLocation });
+      }
     } else if (/^tel:/i.test(href)) {
-      send("phone_click", { link_url: href, link_text: link.textContent.trim().slice(0, 100) });
-      writeAggregateEvent("phone_click", { target: href, targetLabel: link.textContent });
+      if (send("phone_click", { button_location: buttonLocation, event_category: "lead" }, buttonLocation)) {
+        writeAggregateEvent("phone_click", { target: "phone", targetLabel: buttonLocation });
+      }
     } else if (/^mailto:/i.test(href)) {
-      send("email_click", { link_url: href, link_text: link.textContent.trim().slice(0, 100) });
-      writeAggregateEvent("email_click", { target: href, targetLabel: link.textContent });
+      if (send("email_click", { button_location: buttonLocation, event_category: "lead" }, buttonLocation)) {
+        writeAggregateEvent("email_click", { target: "email", targetLabel: buttonLocation });
+      }
     } else {
       const videoId = videoIdFromUrl(link.href);
-      if (videoId) writeAggregateEvent("youtube_click", { target: `youtube:${videoId}`, targetLabel: link.textContent, videoId });
-      else if (link.target === "_blank" && /^https?:/i.test(link.href)) writeAggregateEvent("outbound_click", { target: new URL(link.href).hostname, targetLabel: link.textContent });
+      if (videoId) {
+        if (send("video_start", { video_id: videoId, video_title: trim(link.getAttribute("aria-label") || link.textContent, 160), event_category: "engagement" }, videoId)) {
+          writeAggregateEvent("video_start", { target: `youtube:${videoId}`, targetLabel: "YouTube", videoId });
+        }
+      } else if (link.target === "_blank" && /^https?:/i.test(link.href)) {
+        const reviewContext = link.closest("[class*='review'],[class*='testimonial'],[data-review]");
+        const name = reviewContext ? "review_source_click" : "outbound_click";
+        if (send(name, { link_domain: linkDomain, button_location: buttonLocation, event_category: reviewContext ? "social_proof" : "outbound" }, linkDomain)) {
+          writeAggregateEvent(name, { target: linkDomain, targetLabel: buttonLocation });
+        }
+      }
     }
   });
 
@@ -89,22 +114,40 @@
     const button = event.target.closest("button");
     if (!button) return;
     const label = trim(button.textContent || button.getAttribute("aria-label"), 160);
-    if (button.matches("[data-commerce-open], .page-share__trigger, .page-share__action, #consent-toggle") || /הזמנה|שיתוף|booking|share/i.test(label)) {
-      writeAggregateEvent("button_click", { target: button.id || button.className, targetLabel: label });
+    const buttonLocation = trim(button.closest("header,nav,main,section,footer,dialog")?.tagName.toLowerCase() || "page", 40);
+    if (button.matches("[data-commerce-open]")) {
+      if (send("booking_form_open", { button_location: buttonLocation, form_name: "booking_request", event_category: "lead" }, buttonLocation)) {
+        writeAggregateEvent("booking_form_open", { target: "booking_request", targetLabel: buttonLocation });
+      }
+    } else if (button.matches(".youtube-click-load, .adult-video-stories__play")) {
+      const fallback = button.parentElement?.querySelector("a[href*='youtu']");
+      const videoId = trim(button.dataset.youtubeId || button.dataset.videoId || videoIdFromUrl(fallback?.href), 32);
+      if (videoId && send("video_start", { video_id: videoId, video_title: trim(button.getAttribute("aria-label"), 160), event_category: "engagement" }, videoId)) {
+        seenIframeVideos.add(videoId);
+        writeAggregateEvent("video_start", { target: `youtube:${videoId}`, targetLabel: "YouTube", videoId });
+      }
     }
   });
 
-  document.addEventListener("submit", (event) => {
-    const form = event.target;
-    if (!(form instanceof HTMLFormElement) || !form.checkValidity()) return;
-    send("generate_lead", {
-      form_id: form.id || "unknown",
-      form_name: form.getAttribute("name") || form.id || "unknown"
-    });
-    writeAggregateEvent("form_submit", { target: form.id || "unknown", targetLabel: form.getAttribute("name") || form.id || "טופס" });
+  const markFormStart = (event) => {
+    const form = event.target?.closest?.("form");
+    if (!(form instanceof HTMLFormElement) || startedForms.has(form) || form.closest("#admin-main")) return;
+    startedForms.add(form);
+    const formName = trim(form.getAttribute("name") || form.id || "unknown", 80);
+    send("booking_form_start", { form_name: formName, event_category: "lead" }, formName);
+    writeAggregateEvent("booking_form_start", { target: formName, targetLabel: "form" });
+  };
+  document.addEventListener("input", markFormStart, { capture: true, passive: true });
+  document.addEventListener("change", markFormStart, { capture: true, passive: true });
+
+  document.addEventListener("amit:lead-saved", (event) => {
+    const formName = trim(event.detail?.formName || "lead_form", 80);
+    const leadId = trim(event.detail?.leadId, 80);
+    if (send("generate_lead", { form_name: formName, event_category: "lead" }, leadId || formName)) {
+      writeAggregateEvent("generate_lead", { target: formName, targetLabel: "confirmed" });
+    }
   });
 
-  const seenIframeVideos = new Set();
   window.addEventListener("blur", () => {
     window.setTimeout(() => {
       const frame = document.activeElement;
@@ -112,7 +155,9 @@
       const videoId = videoIdFromUrl(frame.src);
       if (!videoId || seenIframeVideos.has(videoId)) return;
       seenIframeVideos.add(videoId);
-      writeAggregateEvent("youtube_click", { target: `youtube:${videoId}`, targetLabel: frame.title || "סרטון YouTube", videoId });
+      if (send("video_start", { video_id: videoId, video_title: trim(frame.title || "סרטון YouTube", 160), event_category: "engagement" }, videoId)) {
+        writeAggregateEvent("video_start", { target: `youtube:${videoId}`, targetLabel: "YouTube", videoId });
+      }
     }, 0);
   });
 

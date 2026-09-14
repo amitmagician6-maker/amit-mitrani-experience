@@ -100,6 +100,12 @@ window.saveAmitLead = async (formData) => {
   };
 
   const result = await addDoc(collection(db, "leads"), payload);
+  document.dispatchEvent(new CustomEvent("amit:lead-saved", {
+    detail: {
+      leadId: result.id,
+      formName: isBookingRequest ? "booking_request" : "contact_request"
+    }
+  }));
   return result.id;
 };
 
