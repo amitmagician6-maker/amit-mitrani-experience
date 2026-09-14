@@ -80,6 +80,10 @@
     .experience { display:grid; grid-template-columns:1.08fr .92fr; gap:20px; align-items:stretch; }
     .video-stage { min-height:460px; overflow:hidden; position:relative; border:1px solid var(--line); border-radius:26px; background:#0d0c13; }
     .video-stage iframe { width:100%; height:100%; position:absolute; inset:0; border:0; }
+    .youtube-click-load { width:100%; height:100%; position:absolute; inset:0; display:block; padding:0; overflow:hidden; border:0; color:inherit; background:#0d0c13; cursor:pointer; }
+    .youtube-click-load picture,.youtube-click-load img { width:100%; height:100%; display:block; }
+    .youtube-click-load img { object-fit:fill; }
+    .youtube-click-load:focus-visible { z-index:2; outline:4px solid var(--gold); outline-offset:-5px; }
     .video-poster { display:block; width:100%; height:100%; position:absolute; inset:0; color:white; }
     .video-poster img { width:100%; height:100%; object-fit:cover; object-position:50% 20%; }
     .video-poster::after { content:""; position:absolute; inset:0; background:linear-gradient(180deg,transparent 42%,rgba(7,6,12,.82)); }
@@ -332,7 +336,7 @@
 
 
 
-    <section><div class="shell"><div class="experience"><div class="video-stage"><iframe src="https://www.youtube-nocookie.com/embed/192kb8VAwjU?rel=0" title="מופע במה לקהל גדול" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div><div class="video-copy"><div class="kicker">לראות את עמית בפעולה</div><h2>מופע במה לקהל גדול</h2><p>הדגמה לאופן שבו מופע חזותי, קצב ומתנדבים מהקהל מתחברים בחלל גדול.</p><div class="hero-actions"><a class="btn btn-gold" href="https://www.youtube.com/watch?v=192kb8VAwjU" target="_blank" rel="noopener">פתיחת הסרטון</a><a class="btn" href="index.html#contact">בדיקת התאמה</a></div></div></div><div class="gallery"><figure><img src="assets/optimized/amit-time-machine-700.webp" alt="קסם חזותי שמתאים לצפייה קבוצתית" loading="lazy" width="900" height="700"><figcaption>קסם חזותי שמתאים לצפייה קבוצתית</figcaption></figure><figure><img src="assets/optimized/amit-golden-1600.webp" alt="עמית מיטרני על הבמה" loading="lazy" width="900" height="700"><figcaption>עמית מיטרני על הבמה</figcaption></figure><figure><img src="assets/optimized/amit-mentalism-1200.webp" alt="אמנות חושים מול קהל" loading="lazy" width="900" height="700"><figcaption>אמנות חושים מול קהל</figcaption></figure></div></div></section>
+    <section><div class="shell"><div class="experience"><div class="video-stage"><button class="youtube-click-load" type="button" data-youtube-id="192kb8VAwjU" data-youtube-title="מופע במה לקהל גדול" aria-label="הפעלת הסרטון המלא"><picture><source media="(max-width:720px)" srcset="assets/video-posters/shows-for-institutions-mobile.webp"><img src="assets/video-posters/shows-for-institutions-desktop.webp" alt="" loading="lazy" width="592" height="459"></picture></button></div><div class="video-copy"><div class="kicker">לראות את עמית בפעולה</div><h2>מופע במה לקהל גדול</h2><p>הדגמה לאופן שבו מופע חזותי, קצב ומתנדבים מהקהל מתחברים בחלל גדול.</p><div class="hero-actions"><a class="btn btn-gold" href="https://www.youtube.com/watch?v=192kb8VAwjU" target="_blank" rel="noopener" aria-label="לצפייה בסרטון המלא ב-YouTube">פתיחת הסרטון</a><a class="btn" href="index.html#contact">בדיקת התאמה</a></div></div></div><div class="gallery"><figure><img src="assets/optimized/amit-time-machine-700.webp" alt="קסם חזותי שמתאים לצפייה קבוצתית" loading="lazy" width="900" height="700"><figcaption>קסם חזותי שמתאים לצפייה קבוצתית</figcaption></figure><figure><img src="assets/optimized/amit-golden-1600.webp" alt="עמית מיטרני על הבמה" loading="lazy" width="900" height="700"><figcaption>עמית מיטרני על הבמה</figcaption></figure><figure><img src="assets/optimized/amit-mentalism-1200.webp" alt="אמנות חושים מול קהל" loading="lazy" width="900" height="700"><figcaption>אמנות חושים מול קהל</figcaption></figure></div></div></section>
     <section><div class="shell"><div class="section-head"><div class="kicker">איך זה עובד</div><h2>מה מקבלים במסלול הזה</h2><p>כל פרט נסגר רק לאחר שיחה ישירה עם עמית. העמוד מסביר את דרך ההתאמה ואינו מבטיח זמינות, מחיר או היקף קבוע.</p></div><div class="grid"><article class="card"><b>קצב לקבוצה</b><p>המופע מתוכנן לקהל מאורגן ולרמת הקשב שמתאימה לגיל.</p></article><article class="card"><b>בדיקת תנאי המקום</b><p>במה, ישיבה, חשמל והגברה נבדקים לפני אישור.</p></article><article class="card"><b>תיאום מול הצוות</b><p>איש קשר מקבל את פרטי ההכנה ואת מסלול התיאום.</p></article><article class="card"><b>חוויה חזותית</b><p>התוכן נבנה כך שגם קהל גדול יוכל לעקוב ולהשתתף.</p></article></div></div></section>
 
     <section><div class="shell"><div class="section-head"><div class="kicker">דוגמאות מוחשיות</div><h2>מה עמית יכול ליצור בעולם הזה</h2><p>הדוגמאות ממחישות את הכיוון. המבנה הסופי נקבע לפי הקהל, המטרה והמסלול שנבחר.</p></div><div class="example-grid"><article class="example-card"><span>01</span><h3>פתיחה חזותית לקבוצה גדולה</h3><p>קטע שנראה היטב גם מהשורות האחרונות ומכניס את הקהל לאנרגיה.</p></article><article class="example-card"><span>02</span><h3>נציגים מהקהל</h3><p>משתתפים נבחרים עולים לפי תיאום עם הצוות והופכים לחלק מהמופע.</p></article><article class="example-card"><span>03</span><h3>סיום משותף</h3><p>רגע מסכם שמפעיל את כל הקבוצה בלי לאבד שליטה על הקצב.</p></article></div></div></section>
@@ -387,6 +391,19 @@
     </div>
   </div>
   <script>
+    document.querySelectorAll(".youtube-click-load").forEach((button) => {
+      button.addEventListener("click", () => {
+        const iframe = document.createElement("iframe");
+        iframe.src = `https://www.youtube-nocookie.com/embed/${button.dataset.youtubeId}?autoplay=1&rel=0`;
+        iframe.title = button.dataset.youtubeTitle;
+        iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+        iframe.allowFullscreen = true;
+        iframe.referrerPolicy = "strict-origin-when-cross-origin";
+        button.replaceWith(iframe);
+        iframe.focus();
+      }, { once:true });
+    });
+
     const a11yTrigger = document.querySelector("#a11y-trigger");
     const a11yTriggers = document.querySelectorAll("[data-a11y-open], #a11y-trigger");
     const a11yPanel = document.querySelector("#a11y-panel");
