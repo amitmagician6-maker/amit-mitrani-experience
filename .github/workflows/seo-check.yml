@@ -22,4 +22,6 @@ jobs:
           node-version: 22
 
       - name: Validate site and SEO integrity
-        run: node tests/site-check.mjs
+        run: |
+          node tests/site-check.mjs
+          node tests/invitation-photo-check.mjs

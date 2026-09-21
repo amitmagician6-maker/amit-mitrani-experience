@@ -4,7 +4,6 @@ const MAX_FILE_BYTES = 20 * 1024 * 1024;
 const SUPPORTED_TYPE = /^image\/(jpeg|png|webp)$/;
 
 export function photoErrorMessage(error) {
-  if (error?.message === "photo-quality") return "התמונה מפורטת מדי לשמירה באיכות טובה. בחרו קובץ JPG אחר; התמונה הקיימת לא שונתה.";
   if (error?.message === "photo-size") return "יש לבחור תמונה בגודל של עד 20MB.";
   return "לא הצלחנו להכין את התמונה. בחרו קובץ JPG, PNG או WebP תקין.";
 }
@@ -35,13 +34,20 @@ export async function compressPhoto(file) {
   if (source.length <= MAX_DATA_LENGTH) return source;
 
   const longest = Math.max(width, height);
-  const sizes = [...new Set([2560, 2240, 1920, 1600, 1400].map(size => Math.min(size, longest)))];
+  // First prefer high resolution and high quality. If a detailed image exceeds
+  // the inline storage budget, tune compression before reducing its dimensions.
+  const attempts = [
+    ...[2560, 2240, 1920, 1600, 1400].map(size => ({ size, qualities: [.94, .90, .86] })),
+    ...[1600, 1400, 1200, 1024, 900, 768].map(size => ({ size, qualities: [.82, .78, .74, .70, .66, .62] }))
+  ];
+  const tried = new Set();
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
   if (!context) throw new Error("photo-encode");
   let format = "image/webp";
   try {
-    for (const max of sizes) {
+    for (const { size, qualities } of attempts) {
+      const max = Math.min(size, longest);
       const scale = max / longest;
       canvas.width = Math.max(1, Math.round(width * scale));
       canvas.height = Math.max(1, Math.round(height * scale));
@@ -53,7 +59,10 @@ export async function compressPhoto(file) {
       }
       // Always resize from the original, never from a previously compressed copy.
       context.drawImage(image, 0, 0, canvas.width, canvas.height);
-      for (const quality of [.94, .90, .86]) {
+      for (const quality of qualities) {
+        const key = `${max}:${quality}`;
+        if (tried.has(key)) continue;
+        tried.add(key);
         let result = canvas.toDataURL(format, quality);
         // Safari can silently return PNG when WebP encoding is unsupported.
         // PNG ignores quality: shrinking it repeatedly caused 360px invitations.
@@ -68,8 +77,10 @@ export async function compressPhoto(file) {
         if (result.length <= MAX_DATA_LENGTH) return result;
       }
     }
-    // Do not silently destroy detail to force an unusually complex image to fit.
-    throw new Error("photo-quality");
+    // A working JPEG/WebP encoder fits even high-entropy images at the final
+    // profile. Reaching this point indicates an encoder failure, not a request
+    // for the user to manually convert their photo and try again.
+    throw new Error("photo-encode");
   } finally {
     canvas.width = canvas.height = 1;
   }

@@ -1,4 +1,4 @@
-import { compressPhoto, photoErrorMessage } from "./invitation-photo.js?v=1";
+import { compressPhoto, photoErrorMessage } from "./invitation-photo.js?v=2";
 import { db } from "./firebase-public-config.js";
 import { addDoc,collection,doc,getDoc,getDocs,orderBy,query,serverTimestamp,setDoc,Timestamp,updateDoc,writeBatch } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 

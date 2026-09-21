@@ -58,9 +58,19 @@ await test.compress(file);
 assert.equal(test.encodes[0].width, 600);
 assert.equal(test.encodes[0].height, 900, "Never upscale a low-resolution source");
 
+test = setup({ webp: false, encodeSize: ({ type, width, quality }) => type !== "image/png" && width <= 1600 && quality <= .78 ? 350000 : 900000 });
+assert.match(await test.compress(file), /^data:image\/jpeg;base64,/);
+assert.equal(test.encodes.at(-1).width, 1600, "Detailed invitations must upload by tuning quality without a tiny thumbnail");
+assert.equal(test.encodes.at(-1).quality, .78);
+assert.ok(test.draws.every(x => x.image === test.draws[0].image), "Every resize must use the original decoded image");
+
+test = setup({ webp: false, encodeSize: ({ type, width, quality }) => type !== "image/png" && width <= 900 && quality <= .66 ? 390000 : 900000 });
+assert.match(await test.compress(file), /^data:image\/jpeg;base64,/, "Very noisy images must also fit instead of being rejected");
+assert.equal(test.encodes.at(-1).width, 900);
+
 test = setup({ encodeSize: () => 900000 });
-await assert.rejects(test.compress(file), /photo-quality/);
-assert.ok(test.encodes.every(x => x.width >= 1400 && x.quality >= .86), "Never silently degrade into a thumbnail");
+await assert.rejects(test.compress(file), /photo-encode/);
+assert.ok(test.encodes.every(x => x.width >= 768 && x.quality >= .62), "Do not return to the old 360px PNG shrinking loop");
 assert.equal(test.canvas().width, 1, "Release the canvas after failure");
 assert.ok(test.draws.every(x => x.image === test.draws[0].image), "Every resize must use the original decoded image");
 
@@ -69,4 +79,4 @@ assert.equal(await test.compress(null), "");
 await assert.rejects(test.compress({ ...file, size: 21 * 1024 * 1024 }), /photo-size/);
 await assert.rejects(test.compress({ ...file, type: "image/svg+xml" }), /photo-type/);
 await assert.rejects(setup({ broken: true }).compress(file), /photo-decode/);
-console.log("Invitation photo regression checks passed (original preservation, PNG fallback, resolution, quality floor, failures).");
+console.log("Invitation photo regression checks passed (original preservation, PNG fallback, detailed and noisy images, resolution, failures).");
