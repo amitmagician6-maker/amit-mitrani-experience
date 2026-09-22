@@ -22,21 +22,16 @@ export async function readPublicInvitation(id) {
 }
 
 export function setupCompactRsvp(form) {
-  const count = form.elements.guestCount;
-  const details = form.querySelector("#rsvp-details");
-  const open = () => {
-    if (count.disabled) return;
-    details.hidden = false;
-    details.disabled = false;
+  const count=form.elements.guestCount,details=form.querySelector('#rsvp-details');
+  const plus=form.querySelector('#rsvp-plus'),minus=form.querySelector('#rsvp-minus'),decline=form.querySelector('#rsvp-decline'),display=form.querySelector('#rsvp-count-display');
+  const setCount=(value,response='yes')=>{
+    if(count.disabled)return;
+    count.value=String(value);form.elements.response.value=response;display.textContent=response==='no'?'לא נגיע':String(value);
+    minus.disabled=value<=1;plus.disabled=value>=20;
+    details.hidden=false;details.disabled=false;
   };
-  count.addEventListener("click", open);
-  count.addEventListener("change", () => {
-    form.elements.response.value = count.value === "0" ? "no" : "yes";
-    open();
-  });
-  return () => {
-    details.hidden = true;
-    details.disabled = true;
-    count.disabled = true;
-  };
+  plus.onclick=()=>setCount(Math.min(20,Number(count.value)+1));
+  minus.onclick=()=>setCount(Math.max(1,Number(count.value)-1));
+  decline.onclick=()=>setCount(0,'no');
+  return ()=>{details.hidden=true;details.disabled=true;count.disabled=true;plus.disabled=true;minus.disabled=true;decline.disabled=true};
 }

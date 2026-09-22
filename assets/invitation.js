@@ -1,5 +1,5 @@
 import { compressPhoto, photoErrorMessage } from "./invitation-photo.js?v=2";
-import { readPublicInvitation, setupCompactRsvp } from "./invitation-guest.js?v=1";
+import { readPublicInvitation, setupCompactRsvp } from "./invitation-guest.js?v=2";
 let db,addDoc,collection,doc,getDoc,getDocs,orderBy,query,serverTimestamp,setDoc,Timestamp,updateDoc,writeBatch;
 let databasePromise;
 function ensureDatabase(){
