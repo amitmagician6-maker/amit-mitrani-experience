@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="he" dir="rtl">
-<head><!-- Google Tag Manager --><script>window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){dataLayer.push(arguments)};gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'granted'});(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f)})(window,document,'script','dataLayer','GTM-M7H725PC');</script><!-- End Google Tag Manager --><script defer src="assets/analytics.js"></script>
+<head><!-- Google Tag Manager --><script>window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){dataLayer.push(arguments)};gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'granted'});(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f)})(window,document,'script','dataLayer','GTM-M7H725PC');</script><!-- End Google Tag Manager --><script>(()=>{const load=()=>{const script=document.createElement('script');script.src='assets/analytics.js';script.defer=true;document.head.append(script)};if(new URLSearchParams(location.search).has('id'))document.addEventListener('invitation-ready',load,{once:true});else load()})()</script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>הזמנה דיגיטלית לאירוע | עמית מיטרני</title>
@@ -9,9 +9,13 @@
   <link rel="canonical" href="https://amitgic.co.il/digital-invitation.html">
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
-  <script>if(new URLSearchParams(location.search).has('id')||location.hash.startsWith('#manage='))document.documentElement.classList.add('invitation-loading')</script>
+  <script>
+    const publicInvitationId=new URLSearchParams(location.search).get('id');
+    if(publicInvitationId||location.hash.startsWith('#manage='))document.documentElement.classList.add('invitation-loading');
+    if(publicInvitationId&&/^[A-Za-z0-9_-]{10,80}$/.test(publicInvitationId))window.invitationRead=fetch('https://firestore.googleapis.com/v1/projects/amit-mitrani-crm/databases/(default)/documents/invitations/'+encodeURIComponent(publicInvitationId),{signal:AbortSignal.timeout(15000)}).catch(()=>null);
+  </script>
   <link rel="stylesheet" href="assets/invitation.css?v=3">
-  <link rel="stylesheet" href="assets/invitation-upgrade.css?v=11">
+  <link rel="stylesheet" href="assets/invitation-upgrade.css?v=12">
   <style>[hidden]{display:none!important}body{overflow-x:hidden}.details span:has(#guest-address:empty){display:none}</style>
 </head>
 <body><!-- Google Tag Manager (noscript) --><noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-M7H725PC" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript><!-- End Google Tag Manager (noscript) -->
@@ -76,7 +80,17 @@
         <div class="details"><span><small>תאריך</small><b id="guest-date"></b></span><span><small>שעה</small><b id="guest-time"></b></span><span><small>מקום</small><b id="guest-venue"></b></span><span><small>כתובת</small><b id="guest-address"></b></span></div>
       </article>
       <div class="guest-actions"><button id="jump-rsvp" type="button">אישור הגעה</button><a id="navigate-waze" target="_blank" rel="noopener">ניווט ב־Waze</a><a id="navigate-google" target="_blank" rel="noopener">ניווט ב־Google Maps</a><button id="add-calendar" type="button">הוסף ליומן</button><button id="guest-whatsapp" type="button">שיתוף ב־WhatsApp</button></div>
-      <form class="rsvp-card" id="rsvp-form"><h2>מאשרים הגעה</h2><label>שם מלא<input name="guestName" required maxlength="60"></label><label>טלפון של הורה / מלווה — לא חובה<input name="guardianPhone" type="tel" maxlength="30" inputmode="tel" autocomplete="tel"></label><div class="two"><label>מגיעים?<select name="response"><option value="yes">כן, בשמחה</option><option value="no">לצערי לא</option></select></label><label>כמה אנשים מגיעים?<input name="guestCount" type="number" min="1" max="20" value="1"></label></div><label>הערה — לא חובה<input name="note" maxlength="160"></label><button class="primary" type="submit">שליחת תשובה</button><p class="status" id="rsvp-status" role="status"></p><div class="post-rsvp" id="post-rsvp" hidden><span>רוצים גם יום הולדת עם עמית מיטרני?</span><a href="shows-for-kids.html">לפרטים על המופע</a></div></form>
+      <form class="rsvp-card rsvp-compact" id="rsvp-form">
+        <div class="rsvp-row"><h2>מאשרים הגעה</h2><label for="rsvp-count">כמה מגיעים?<select id="rsvp-count" name="guestCount" required aria-controls="rsvp-details"><option value="" disabled selected>בחרו כמות אנשים</option><option value="1">אדם אחד</option><option value="2">2 אנשים</option><option value="3">3 אנשים</option><option value="4">4 אנשים</option><option value="5">5 אנשים</option><option value="6">6 אנשים</option><option value="7">7 אנשים</option><option value="8">8 אנשים</option><option value="9">9 אנשים</option><option value="10">10 אנשים</option><option value="11">11 אנשים</option><option value="12">12 אנשים</option><option value="13">13 אנשים</option><option value="14">14 אנשים</option><option value="15">15 אנשים</option><option value="16">16 אנשים</option><option value="17">17 אנשים</option><option value="18">18 אנשים</option><option value="19">19 אנשים</option><option value="20">20 אנשים</option><option value="0">לצערי לא נגיע</option></select></label></div>
+        <input type="hidden" name="response" value="yes">
+        <fieldset id="rsvp-details" hidden disabled><legend class="sr-only">פרטי אישור ההגעה</legend>
+          <label>שם מלא<input name="guestName" required minlength="2" maxlength="60" autocomplete="name"></label>
+          <label>טלפון של הורה / מלווה — לא חובה<input name="guardianPhone" type="tel" maxlength="30" inputmode="tel" autocomplete="tel"></label>
+          <label>הערה — לא חובה<input name="note" maxlength="160"></label>
+          <button class="primary" type="submit">שליחת תשובה</button>
+        </fieldset>
+        <p class="status" id="rsvp-status" role="status"></p><div class="post-rsvp" id="post-rsvp" hidden><span>רוצים גם יום הולדת עם עמית מיטרני?</span><a href="shows-for-kids.html">לפרטים על המופע</a></div>
+      </form>
       <aside class="invitation-magic-teaser"><span aria-hidden="true">✨</span><div><h2>הקסם מתחיל כבר עכשיו</h2><p>מוכנים להפתעה קטנה לפני האירוע?</p></div><a href="index.html#magic">לנסות קסם אינטראקטיבי</a></aside>
       <footer class="invitation-brand">עמית מיטרני – קוסם ואמן חושים</footer>
     </section>
@@ -90,6 +104,6 @@
     <h2 id="a11y-title">התאמות נגישות</h2>
     <div class="a11y-grid"><button type="button" data-a11y="contrast" aria-pressed="false">ניגודיות גבוהה</button><button type="button" data-a11y="font" aria-pressed="false">הגדלת טקסט</button><button type="button" data-a11y="links" aria-pressed="false">הדגשת קישורים</button><button type="button" data-a11y="gray" aria-pressed="false">גווני אפור</button><button type="button" data-a11y-reset>איפוס</button><button type="button" data-a11y-close>סגירה</button></div>
   </div>
-  <script type="module" src="assets/invitation.js?v=15"></script>
+  <script type="module" src="assets/invitation.js?v=16"></script>
 </body>
 </html>

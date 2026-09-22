@@ -25,3 +25,4 @@ jobs:
         run: |
           node tests/site-check.mjs
           node tests/invitation-photo-check.mjs
+          node tests/invitation-guest-check.mjs

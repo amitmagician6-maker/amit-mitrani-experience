@@ -35,3 +35,6 @@
 .preview .invite-identity h1,.preview .invite-identity h2{margin:6px auto 4px;font-size:clamp(38px,5.4vw,56px);line-height:1.04}
 .preview .invite-identity p{margin:3px 0;font-size:clamp(19px,2.7vw,22px);line-height:1.3}
 @media(max-width:760px){.preview{gap:7px}.preview .seal{margin-bottom:0;padding:5px 10px}.preview .invite-identity{padding:0 7px 3px}.preview .invite-identity small{font-size:17px}.preview .invite-identity h1,.preview .invite-identity h2{margin:4px auto 3px;font-size:clamp(37px,11vw,46px)}.preview .invite-identity p{font-size:19px}}
+
+/* Compact RSVP: reveal personal details when a guest chooses a count. */
+.rsvp-compact{scroll-margin-top:100px}.rsvp-row{display:flex;align-items:center;justify-content:space-between;gap:14px}.rsvp-row h2{margin:0;font-size:21px}.rsvp-row label{margin:0;font-size:13px;gap:4px}.rsvp-row select{max-width:100%;min-width:160px}.rsvp-compact fieldset{min-width:0;margin:18px 0 0;padding:0;border:0}.rsvp-compact .primary{width:100%}.rsvp-compact .status:empty{display:none}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(max-width:380px){.rsvp-row{gap:8px}.rsvp-row h2{font-size:17px}.rsvp-row select{min-width:0;width:155px;padding:9px}}
