@@ -182,6 +182,10 @@ service cloud.firestore {
       );
     }
 
+    match /invitationManagementLinks/{invitationId} {
+      allow read, write: if isAdmin();
+    }
+
     match /invitationManagementRequests/{requestId} {
       allow create: if request.resource.data.keys().hasOnly(['invitationId', 'token', 'action', 'payload', 'createdAt'])
         && request.resource.data.invitationId is string
