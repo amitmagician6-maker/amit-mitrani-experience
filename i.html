@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>פותחים הזמנה…</title>
+  <script>
+    const id=new URLSearchParams(location.search).get("id")||"";
+    if(/^[A-Za-z0-9_-]{10,80}$/.test(id))location.replace(`digital-invitation.html?id=${encodeURIComponent(id)}`);
+    else location.replace("/");
+  </script>
+</head>
+<body>פותחים את ההזמנה…</body>
+</html>
