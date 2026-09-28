@@ -104,6 +104,7 @@ const contentView = document.querySelector("#content-view");
 const crmView = document.querySelector("#crm-view");
 const analyticsView = document.querySelector("#analytics-view");
 const invitationsView = document.querySelector("#invitations-view");
+const pastInvitationsView = document.querySelector("#past-invitations-view");
 const confirmDialog = document.querySelector("#admin-confirm");
 const confirmForm = document.querySelector("#admin-confirm-form");
 const confirmEyebrow = document.querySelector("#admin-confirm-eyebrow");
@@ -1032,6 +1033,7 @@ const bindViewTabs = () => {
       contentView.hidden = selectedView !== "content";
       crmView.hidden = selectedView !== "crm";
       if (invitationsView) invitationsView.hidden = selectedView !== "invitations";
+      if (pastInvitationsView) pastInvitationsView.hidden = selectedView !== "past-invitations";
       if (analyticsView) analyticsView.hidden = selectedView !== "analytics";
     });
   });

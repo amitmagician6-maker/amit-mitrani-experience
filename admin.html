@@ -53,6 +53,7 @@
           <button class="admin-tab active" type="button" data-admin-view="content">תוכן האתר</button>
           <button class="admin-tab" type="button" data-admin-view="crm">פניות, הזמנות ומשימות</button>
           <button class="admin-tab" type="button" data-admin-view="invitations">הזמנות דיגיטליות</button>
+          <button class="admin-tab" type="button" data-admin-view="past-invitations">אירועים שהסתיימו</button>
           <button class="admin-tab" type="button" data-admin-view="analytics">נתונים</button>
         </nav>
 
@@ -219,6 +220,13 @@
             <div class="invitation-storage" id="invitation-storage" aria-live="polite"></div>
             <div class="invitation-search"><input class="control search" id="invitation-search" type="search" placeholder="חיפוש לפי שם, תאריך, מקום או כתובת" aria-label="חיפוש הזמנה"><span id="invitation-search-count"></span></div>
             <div class="invitation-admin-list" id="invitation-admin-list"><p class="empty">טוען הזמנות…</p></div>
+          </section>
+        </section>
+
+        <section id="past-invitations-view" hidden>
+          <section class="panel invitation-admin-panel" id="past-digital-invitations">
+            <div class="panel-head"><div><span class="eyebrow">ארכיון הזמנות</span><h2>אירועים שהסתיימו</h2><p>הזמנות שמועד האירוע שלהן עבר.</p></div></div>
+            <div class="invitation-admin-list" id="past-invitation-admin-list"><p class="empty">טוען הזמנות…</p></div>
           </section>
         </section>
 
