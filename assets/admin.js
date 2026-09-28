@@ -1,7 +1,7 @@
 import { auth, db } from "./firebase-config.js";
 import { startCms } from "./cms-admin.js?v=7";
 import { startAnalytics } from "./analytics-admin.js?v=1";
-import { startInvitationAdmin } from "./invitation-admin.js?v=8";
+import { startInvitationAdmin } from "./invitation-admin.js?v=10";
 import {
   GoogleAuthProvider,
   onAuthStateChanged,
@@ -40,6 +40,7 @@ const loginScreen = document.querySelector("#login-screen");
 const dashboard = document.querySelector("#dashboard");
 const loginButton = document.querySelector("#login-button");
 const logoutButton = document.querySelector("#logout-button");
+const refreshAdminButton = document.querySelector("#refresh-admin-button");
 const loginError = document.querySelector("#login-error");
 const userLabel = document.querySelector("#user-label");
 const leadList = document.querySelector("#lead-list");
@@ -48,6 +49,12 @@ const searchInput = document.querySelector("#lead-search");
 const statusFilter = document.querySelector("#status-filter");
 const taskList = document.querySelector("#task-list");
 const taskForm = document.querySelector("#task-form");
+
+refreshAdminButton?.addEventListener("click", () => {
+  refreshAdminButton.disabled = true;
+  refreshAdminButton.textContent = "מרענן…";
+  location.replace(`${location.pathname}?refresh=${Date.now()}`);
+});
 
 let leads = [];
 let tasks = [];
@@ -369,6 +376,7 @@ onAuthStateChanged(auth, (user) => {
     loginScreen.hidden = true;
     dashboard.hidden = false;
     logoutButton.hidden = true;
+    refreshAdminButton.hidden = false;
     userLabel.textContent = "בדיקה מקומית";
     startCms();
     startAnalytics();
@@ -380,6 +388,7 @@ onAuthStateChanged(auth, (user) => {
   loginScreen.hidden = Boolean(allowed);
   dashboard.hidden = !allowed;
   logoutButton.hidden = !user;
+  refreshAdminButton.hidden = !allowed;
   userLabel.textContent = user?.email || "";
 
   if (allowed) {

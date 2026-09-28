@@ -183,7 +183,19 @@ service cloud.firestore {
     }
 
     match /invitationManagementLinks/{invitationId} {
-      allow read, write: if isAdmin();
+      allow read, update, delete: if isAdmin();
+      allow create: if isAdmin() || (
+        request.resource.data.keys().hasOnly(['token', 'accessCodeId', 'createdAt'])
+        && request.resource.data.token is string
+        && request.resource.data.token.size() >= 40
+        && request.resource.data.token.size() <= 80
+        && request.resource.data.accessCodeId is string
+        && request.resource.data.accessCodeId.size() == 64
+        && request.resource.data.createdAt == request.time
+        && getAfter(/databases/$(database)/documents/invitations/$(invitationId)).data.accessCodeId == request.resource.data.accessCodeId
+        && getAfter(/databases/$(database)/documents/invitationAccess/$(request.resource.data.accessCodeId)).data.used == true
+        && getAfter(/databases/$(database)/documents/invitationAccess/$(request.resource.data.accessCodeId)).data.invitationId == invitationId
+      );
     }
 
     match /invitationManagementRequests/{requestId} {

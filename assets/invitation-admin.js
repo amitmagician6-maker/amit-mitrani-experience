@@ -8,7 +8,7 @@ const hashCode=async value=>Array.from(new Uint8Array(await crypto.subtle.digest
 const strongToken=()=>btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replaceAll("+","-").replaceAll("/","_").replaceAll("=","");
 const sevenDaysAfterEvent=value=>{if(!value)return null;const end=new Date(`${value}T23:59:59`);end.setDate(end.getDate()+7);return end};
 const formatBytes=value=>value<1024?`${value} B`:value<1048576?`${(value/1024).toFixed(1)} KB`:`${(value/1048576).toFixed(1)} MB`;
-const managementMessage=(item,url)=>`היי, זה הקישור הפרטי שלך לצפייה באישורי ההגעה של ${item.name}:\n${url}`;
+const managementMessage=(item,url)=>`היי, מצורף הקישור האישי שלך לצפייה באישורי ההגעה של ${item.name}.\nהקישור מיועד לך בלבד ואין להעביר אותו למוזמנים.\n${url}`;
 const clientManagementUrl=(id,token)=>`${location.origin}/digital-invitation.html#manage=${encodeURIComponent(id)}&token=${encodeURIComponent(token)}&client=1`;
 const clientManagementMarkup=item=>{const token=managementTokens[item.id];if(!token)return`<button class="btn btn-primary" type="button" data-client-management="${item.id}">הכנת קישור אישורי הגעה ללקוח</button>`;const url=clientManagementUrl(item.id,token),shareUrl=`https://wa.me/?text=${encodeURIComponent(managementMessage(item,url))}`;return`<div class="invitation-client-link"><strong>קישור אישורי הגעה ללקוח</strong><input type="text" readonly aria-label="קישור פרטי לאישורי הגעה" value="${esc(url)}"><div><button class="btn btn-primary" type="button" data-copy-client-management="${item.id}">העתקת הקישור</button><a class="btn" href="${shareUrl}" target="_blank" rel="noopener">שליחה ב־WhatsApp</a></div><small>זהו קישור קבוע להזמנה הזו בלבד.</small></div>`};
 

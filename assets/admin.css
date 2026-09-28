@@ -42,6 +42,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .btn-primary { color: #17110a; background: var(--gold); border-color: var(--gold); font-weight: 800; }
 .btn-danger { color: #ffdce1; border-color: #6a3440; background: #28141a; }
 .btn-quiet { background: transparent; }
+#refresh-admin-button { white-space: nowrap; }
 
 .login-screen { min-height: calc(100vh - 77px); display: grid; place-items: center; padding: 40px 0; }
 .login-card { width: min(560px, 100%); text-align: center; padding: clamp(28px, 6vw, 56px); border: 1px solid var(--line); border-radius: 28px; background: linear-gradient(145deg, rgba(34,27,53,.96), rgba(15,13,22,.98)); box-shadow: 0 30px 80px rgba(0,0,0,.4); }
@@ -186,6 +187,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .header-row { min-height: 66px; }
   .brand small, #user-label { display: none; }
   .header-actions .btn { padding: 0 12px; }
+  #refresh-admin-button { min-width: 44px; padding: 0; font-size: 22px; }
+  #refresh-admin-button .refresh-label { display: none; }
   .welcome { display: block; }
   .live-pill { margin-top: 14px; }
   .stats { gap: 9px; }
