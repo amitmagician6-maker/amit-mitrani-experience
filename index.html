@@ -2873,7 +2873,7 @@
       card.appendChild(action);
     });
     document.querySelectorAll("[data-world-close]").forEach((item) => item.addEventListener("click", () => closeModal(worldModal)));
-    document.querySelector("[data-world-hub]").addEventListener("click", () => {
+    document.querySelector("[data-world-hub]")?.addEventListener("click", () => {
       window.location.href = "magic-courses.html";
     });
     document.addEventListener("click", (event) => {
