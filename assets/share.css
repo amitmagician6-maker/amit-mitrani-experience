@@ -237,3 +237,112 @@ details.mobile-nav > summary:focus-visible {
   min-height: 142px;
   align-content: center;
 }
+
+.social-links.site-social-links {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  width: 100%;
+  flex-basis: 100%;
+  margin: 0 0 28px;
+  padding: 24px 18px;
+  border-block: 1px solid rgba(255, 255, 255, .1);
+  color: #f8f5ff;
+  text-align: center;
+}
+
+.site-social-links__title {
+  color: #edc069;
+  font-size: 16px;
+  font-weight: 850;
+}
+
+.site-social-links__icons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.site-social-link {
+  width: 48px;
+  height: 48px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(255, 255, 255, .055);
+  box-shadow: 0 9px 24px rgba(0, 0, 0, .2);
+  text-decoration: none;
+  transition: transform .18s ease, border-color .18s ease, background-color .18s ease;
+}
+
+.site-social-link svg {
+  width: 24px;
+  height: 24px;
+  max-width: none;
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: 1.7;
+}
+
+.site-social-link--instagram {
+  background: linear-gradient(135deg, #833ab4, #fd1d1d 58%, #fcb045);
+}
+
+.site-social-link--instagram svg { fill: none; }
+.site-social-link--instagram svg circle:last-child { fill: currentColor; stroke: none; }
+
+.site-social-link--facebook { background: #1877f2; }
+.site-social-link--youtube { background: #ff0000; }
+.site-social-link--tiktok { background: #050505; }
+
+.site-social-link:hover,
+.site-social-link:focus-visible {
+  transform: translateY(-2px);
+  border-color: #edc069;
+  outline: 3px solid rgba(237, 192, 105, .3);
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .site-social-links { padding-inline: 10px; }
+  .site-social-links__icons { gap: 10px; }
+  .site-social-link { width: 46px; height: 46px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-social-link { transition: none; }
+}
+
+.menu-social-links {
+  display: none;
+}
+
+@media (max-width: 850px) {
+  .menu-social-links {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    margin-top: 4px;
+    padding: 13px 8px 4px;
+    border-top: 1px solid rgba(255, 255, 255, .12);
+  }
+
+  .menu-social-links .site-social-link {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, .18);
+  }
+
+  .menu-social-links .site-social-link svg {
+    width: 20px;
+    height: 20px;
+  }
+}

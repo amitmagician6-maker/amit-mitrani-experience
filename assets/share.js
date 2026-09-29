@@ -65,6 +65,61 @@
 
   const language = document.documentElement.lang?.split("-")[0] || "he";
   const text = copy[language] || copy.en;
+  const socialTitle = {
+    he: "עקבו אחרי עמית מיטרני",
+    en: "Follow Amit Mitrani",
+    fr: "Suivez Amit Mitrani",
+    ru: "Подписывайтесь на Амита Митрани"
+  }[language] || "Follow Amit Mitrani";
+  const socialLabels = {
+    he: { instagram: "עמית מיטרני באינסטגרם", facebook: "עמית מיטרני בפייסבוק", youtube: "עמית מיטרני ביוטיוב", tiktok: "עמית מיטרני בטיקטוק" },
+    en: { instagram: "Amit Mitrani on Instagram", facebook: "Amit Mitrani on Facebook", youtube: "Amit Mitrani on YouTube", tiktok: "Amit Mitrani on TikTok" },
+    fr: { instagram: "Amit Mitrani sur Instagram", facebook: "Amit Mitrani sur Facebook", youtube: "Amit Mitrani sur YouTube", tiktok: "Amit Mitrani sur TikTok" },
+    ru: { instagram: "Амит Митрани в Instagram", facebook: "Амит Митрани в Facebook", youtube: "Амит Митрани на YouTube", tiktok: "Амит Митрани в TikTok" }
+  }[language] || null;
+  const labels = socialLabels || {
+    instagram: "Amit Mitrani on Instagram",
+    facebook: "Amit Mitrani on Facebook",
+    youtube: "Amit Mitrani on YouTube",
+    tiktok: "Amit Mitrani on TikTok"
+  };
+  const socialIconsMarkup = `
+    <a class="site-social-link site-social-link--instagram" href="https://www.instagram.com/amitmiterani_magic/" target="_blank" rel="noopener" aria-label="${labels.instagram}" title="Instagram">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.4" cy="6.7" r="1"></circle></svg>
+    </a>
+    <a class="site-social-link site-social-link--facebook" href="https://www.facebook.com/amitgic/" target="_blank" rel="noopener" aria-label="${labels.facebook}" title="Facebook">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8h3V4h-3c-3.3 0-5 2-5 5v2H6v4h3v7h4v-7h3.5l.5-4h-4V9c0-.7.3-1 1-1z"></path></svg>
+    </a>
+    <a class="site-social-link site-social-link--youtube" href="https://www.youtube.com/@amitmagician6" target="_blank" rel="noopener" aria-label="${labels.youtube}" title="YouTube">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.6 7.2a2.8 2.8 0 0 0-2-2C17.8 4.7 12 4.7 12 4.7s-5.8 0-7.6.5a2.8 2.8 0 0 0-2 2A29 29 0 0 0 2 12a29 29 0 0 0 .4 4.8 2.8 2.8 0 0 0 2 2c1.8.5 7.6.5 7.6.5s5.8 0 7.6-.5a2.8 2.8 0 0 0 2-2A29 29 0 0 0 22 12a29 29 0 0 0-.4-4.8zM10 15.2V8.8l5.5 3.2z"></path></svg>
+    </a>
+    <a class="site-social-link site-social-link--tiktok" href="https://www.tiktok.com/@amitmagic" target="_blank" rel="noopener" aria-label="${labels.tiktok}" title="TikTok">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3c.5 2.8 2.1 4.4 5 4.8v4c-1.9-.1-3.5-.7-5-1.8v6.2a6.2 6.2 0 1 1-5.4-6.1v4.1a2.3 2.3 0 1 0 1.4 2.1V3h4z"></path></svg>
+    </a>`;
+
+  const footer = document.querySelector("footer");
+  if (footer) {
+    let social = footer.querySelector(".social-links");
+    if (!social) {
+      social = document.createElement("nav");
+      const footerContainer = footer.querySelector(".shell") || footer.firstElementChild || footer;
+      footerContainer.prepend(social);
+    }
+    social.className = "social-links site-social-links";
+    social.setAttribute("aria-label", socialTitle);
+    social.innerHTML = `
+      <span class="site-social-links__title">${socialTitle}</span>
+      <span class="site-social-links__icons">${socialIconsMarkup}</span>`;
+  }
+
+  document.querySelectorAll(".mobile-nav-panel, details.mobile-menu .mobile-panel, #primary-nav").forEach((panel) => {
+    if (panel.querySelector(".menu-social-links")) return;
+    const menuSocial = document.createElement("div");
+    menuSocial.className = "menu-social-links";
+    menuSocial.setAttribute("aria-label", socialTitle);
+    menuSocial.innerHTML = socialIconsMarkup;
+    panel.append(menuSocial);
+  });
   const pageTitle = document.querySelector('meta[property="og:title"]')?.content || document.title;
   const pageDescription = document.querySelector('meta[property="og:description"]')?.content
     || document.querySelector('meta[name="description"]')?.content
