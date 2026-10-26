@@ -94,7 +94,7 @@ service cloud.firestore {
     match /invitations/{invitationId} {
       allow create: if request.resource.data.keys().hasOnly([
         'name', 'celebrants', 'firstName', 'age', 'gender', 'secondName', 'secondAge', 'secondGender', 'messageMode', 'eventDate', 'eventTime', 'venueName', 'address',
-        'location', 'message', 'theme', 'photoData', 'status', 'accessCodeId',
+        'location', 'message', 'theme', 'photoData', 'contacts', 'wazeEnabled', 'clientCanEdit', 'status', 'accessCodeId',
         'managementTokenHash', 'expiresAt', 'createdAt'
       ])
       && request.resource.data.name is string
@@ -128,6 +128,10 @@ service cloud.firestore {
       && request.resource.data.theme in ['magic', 'celebration', 'elegant', 'rose', 'ocean', 'neutral']
       && request.resource.data.photoData is string
       && request.resource.data.photoData.size() <= 430000
+      && request.resource.data.contacts is list
+      && request.resource.data.contacts.size() <= 10
+      && request.resource.data.wazeEnabled is bool
+      && request.resource.data.clientCanEdit == true
       && request.resource.data.status == 'active'
       && request.resource.data.managementTokenHash is string
       && request.resource.data.managementTokenHash.size() == 64
@@ -210,7 +214,7 @@ service cloud.firestore {
         && (!request.resource.data.keys().hasAny(['payload']) || (
           request.resource.data.action == 'update'
           && request.resource.data.payload is map
-          && request.resource.data.payload.keys().hasOnly(['name', 'celebrants', 'firstName', 'age', 'gender', 'secondName', 'secondAge', 'secondGender', 'messageMode', 'eventDate', 'eventTime', 'venueName', 'address', 'message', 'theme', 'photoData'])
+          && request.resource.data.payload.keys().hasOnly(['name', 'celebrants', 'firstName', 'age', 'gender', 'secondName', 'secondAge', 'secondGender', 'messageMode', 'eventDate', 'eventTime', 'venueName', 'address', 'message', 'theme', 'photoData', 'contacts', 'wazeEnabled'])
           && request.resource.data.payload.name is string && request.resource.data.payload.name.size() <= 400
           && (!request.resource.data.payload.keys().hasAny(['celebrants']) || (request.resource.data.payload.celebrants is list && request.resource.data.payload.celebrants.size() >= 1 && request.resource.data.payload.celebrants.size() <= 20))
           && (!request.resource.data.payload.keys().hasAny(['firstName']) || (request.resource.data.payload.firstName is string && request.resource.data.payload.firstName.size() <= 40))
@@ -227,6 +231,8 @@ service cloud.firestore {
           && request.resource.data.payload.message is string && request.resource.data.payload.message.size() <= 500
           && request.resource.data.payload.theme in ['magic', 'celebration', 'elegant', 'rose', 'ocean', 'neutral']
           && request.resource.data.payload.photoData is string && request.resource.data.payload.photoData.size() <= 430000
+          && (!request.resource.data.payload.keys().hasAny(['contacts']) || (request.resource.data.payload.contacts is list && request.resource.data.payload.contacts.size() <= 10))
+          && (!request.resource.data.payload.keys().hasAny(['wazeEnabled']) || request.resource.data.payload.wazeEnabled is bool)
         ))
         && request.resource.data.createdAt == request.time;
       allow get: if true;

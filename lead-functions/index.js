@@ -147,11 +147,15 @@ export const buildInvitationManagementView = onDocumentCreated({
       const message = text(payload.message, "").slice(0, 500);
       const theme = ["magic", "celebration", "elegant", "rose", "ocean", "neutral"].includes(payload.theme) ? payload.theme : "magic";
       const photoData = text(payload.photoData, "");
+      const clientFeatures = currentInvitation.clientCanEdit === true;
+      const contacts = clientFeatures && Array.isArray(payload.contacts) ? payload.contacts.slice(0, 10).map((item) => ({ name: String(item?.name || "").trim().slice(0, 40), phone: String(item?.phone || "").trim().replace(/[^+\d\-() ]/g, "").slice(0, 30) })).filter((item) => item.name && item.phone) : [];
+      const wazeEnabled = clientFeatures ? payload.wazeEnabled === true : Boolean(currentInvitation.wazeEnabled);
       if (!name || (celebrants.length && celebrants.some((item) => !item.name || !Number.isInteger(item.age) || item.age < 1 || item.age > 120)) || !Number.isInteger(age) || age < 1 || age > 120 || (secondName && (!Number.isInteger(secondAge) || secondAge < 1 || secondAge > 120)) || !/^\d{4}-\d{2}-\d{2}$/.test(eventDate) || !/^\d{2}:\d{2}$/.test(eventTime) || !venueName || !address || photoData.length > 430000 || (photoData && !/^data:image\/(webp|jpeg|png);base64,/.test(photoData))) throw new Error("invalid update");
       const expiry = new Date(`${eventDate}T23:59:59`);
       expiry.setDate(expiry.getDate() + 2);
       const update = { name, firstName, age, gender, secondName, secondAge, secondGender, messageMode, eventDate, eventTime, venueName, address, location: `${venueName}, ${address}`.slice(0, 250), message, theme, photoData, expiresAt: Timestamp.fromDate(expiry), updatedAt: FieldValue.serverTimestamp() };
       if (celebrants.length) update.celebrants = celebrants;
+      if (clientFeatures) { update.contacts = contacts; update.wazeEnabled = wazeEnabled; }
       await invitationRef.set(update, { merge: true });
       currentInvitation = { ...invitation, ...update };
     }
@@ -160,7 +164,7 @@ export const buildInvitationManagementView = onDocumentCreated({
       const item = entry.data();
       return { guestName: text(item.guestName, ""), guardianPhone: text(item.guardianPhone, ""), response: item.response, guestCount: Number(item.guestCount || 0), note: text(item.note, "") };
     });
-    const publicInvitation = { name: currentInvitation.name, celebrants: currentInvitation.celebrants || [], firstName: currentInvitation.firstName || "", age: currentInvitation.age || "", gender: currentInvitation.gender || "", secondName: currentInvitation.secondName || "", secondAge: currentInvitation.secondAge || "", secondGender: currentInvitation.secondGender || "", messageMode: currentInvitation.messageMode || "custom", eventDate: currentInvitation.eventDate, eventTime: currentInvitation.eventTime, venueName: currentInvitation.venueName || "", address: currentInvitation.address || "", location: currentInvitation.location || "", message: currentInvitation.message || "", theme: currentInvitation.theme || "magic", photoData: currentInvitation.photoData || "" };
+    const publicInvitation = { name: currentInvitation.name, celebrants: currentInvitation.celebrants || [], firstName: currentInvitation.firstName || "", age: currentInvitation.age || "", gender: currentInvitation.gender || "", secondName: currentInvitation.secondName || "", secondAge: currentInvitation.secondAge || "", secondGender: currentInvitation.secondGender || "", messageMode: currentInvitation.messageMode || "custom", eventDate: currentInvitation.eventDate, eventTime: currentInvitation.eventTime, venueName: currentInvitation.venueName || "", address: currentInvitation.address || "", location: currentInvitation.location || "", message: currentInvitation.message || "", theme: currentInvitation.theme || "magic", photoData: currentInvitation.photoData || "", clientCanEdit: currentInvitation.clientCanEdit === true, contacts: currentInvitation.contacts || [], wazeEnabled: currentInvitation.wazeEnabled === true };
     await requestRef.set({ status: "ready", token: FieldValue.delete(), payload: FieldValue.delete(), processedAt: FieldValue.serverTimestamp(), invitation: publicInvitation, responses }, { merge: true });
   } catch (error) {
     console.error("buildInvitationManagementView failed", error);
