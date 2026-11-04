@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow">
   <title>מערכת הניהול | עמית מיטרני</title>
   <meta name="description" content="מערכת ניהול הפניות והאירועים של עמית מיטרני">
-  <link rel="stylesheet" href="assets/admin.css?v=10">
+  <link rel="stylesheet" href="assets/admin.css?v=11">
 </head>
 <body>
   <a class="skip-link" href="#admin-main">דילוג לתוכן המרכזי</a>
@@ -170,6 +170,8 @@
             <article class="stat"><small>כל הפניות</small><strong id="stat-total">0</strong></article>
           </div>
 
+          <button class="lead-detail-backdrop" id="lead-detail-backdrop" type="button" aria-label="סגירת פרטי הפנייה" hidden></button>
+
           <div class="workspace">
           <section class="panel">
             <div class="panel-head">
@@ -196,7 +198,7 @@
 
           <aside class="side-stack">
             <section class="panel detail" id="lead-detail">
-              <h3>פרטי הפנייה</h3>
+              <div class="detail-head"><h3>פרטי הפנייה</h3></div>
               <p class="empty">בחרו פנייה כדי לראות את כל הפרטים ולעדכן טיפול.</p>
             </section>
 
@@ -300,6 +302,6 @@
   </dialog>
 
   <div class="toast" id="admin-toast" role="status"></div>
-  <script type="module" src="assets/admin.js?v=20"></script>
+  <script type="module" src="assets/admin.js?v=21"></script>
 </body>
 </html>

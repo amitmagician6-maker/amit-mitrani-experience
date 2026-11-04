@@ -45,6 +45,7 @@ const loginError = document.querySelector("#login-error");
 const userLabel = document.querySelector("#user-label");
 const leadList = document.querySelector("#lead-list");
 const leadDetail = document.querySelector("#lead-detail");
+const leadDetailBackdrop = document.querySelector("#lead-detail-backdrop");
 const searchInput = document.querySelector("#lead-search");
 const statusFilter = document.querySelector("#status-filter");
 const taskList = document.querySelector("#task-list");
@@ -61,6 +62,23 @@ let tasks = [];
 let selectedLeadId = "";
 let unsubscribeLeads = null;
 let unsubscribeTasks = null;
+
+const closeLeadDetail = ({ restoreFocus = true } = {}) => {
+  leadDetail.classList.remove("is-open");
+  leadDetailBackdrop.hidden = true;
+  document.body.classList.remove("lead-detail-open");
+  if (restoreFocus && selectedLeadId) {
+    leadList.querySelector(`[data-lead-id="${CSS.escape(selectedLeadId)}"]`)?.focus();
+  }
+};
+
+const revealLeadDetail = () => {
+  if (!window.matchMedia("(max-width: 980px)").matches) return;
+  leadDetail.classList.add("is-open");
+  leadDetailBackdrop.hidden = false;
+  document.body.classList.add("lead-detail-open");
+  requestAnimationFrame(() => leadDetail.querySelector(".detail-close")?.focus());
+};
 
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({
   "&": "&amp;",
@@ -202,7 +220,7 @@ const renderLeads = () => {
   `).join("");
 
   leadList.querySelectorAll("[data-lead-id]").forEach((card) => {
-    const open = () => selectLead(card.dataset.leadId);
+    const open = () => selectLead(card.dataset.leadId, { reveal: true });
     card.addEventListener("click", open);
     card.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
@@ -213,22 +231,22 @@ const renderLeads = () => {
   });
 };
 
-const selectLead = (id) => {
+const selectLead = (id, { reveal = false } = {}) => {
   selectedLeadId = id;
   const lead = leads.find((item) => item.id === id);
   renderLeads();
   if (!lead) return;
 
   leadDetail.innerHTML = `
-    <h3>${escapeHtml(lead.name || "פנייה")}</h3>
+    <div class="detail-head"><h3>${escapeHtml(lead.name || "פנייה")}</h3><button class="detail-close" type="button" aria-label="סגירת פרטי הפנייה">×</button></div>
     ${lead.demo ? '<p class="badge badge-quoted">נתוני הדגמה</p>' : ""}
     ${lead.requestType === "booking_request" ? '<p class="badge badge-pending">בקשת הזמנה</p>' : '<p class="badge">פנייה כללית</p>'}
     <div class="detail-grid">
-      <div class="detail-row"><small>מספר פנייה</small><strong>${escapeHtml(lead.requestNumber || lead.id)}</strong></div>
-      <div class="detail-row"><small>טלפון</small><a href="${phoneHref(lead.phone)}">${escapeHtml(lead.phone || "לא צוין")}</a></div>
-      <div class="detail-row"><small>דוא״ל</small>${lead.email ? `<a href="mailto:${escapeHtml(lead.email)}">${escapeHtml(lead.email)}</a>` : "<strong>לא צוין</strong>"}</div>
+      <div class="detail-row"><small>מספר פנייה</small><strong class="ltr-value">${escapeHtml(lead.requestNumber || lead.id)}</strong></div>
+      <div class="detail-row"><small>טלפון</small>${lead.phone ? `<a class="ltr-value" dir="ltr" href="${phoneHref(lead.phone)}">${escapeHtml(lead.phone)}</a>` : "<strong>לא צוין</strong>"}</div>
+      <div class="detail-row"><small>דוא״ל</small>${lead.email ? `<a class="ltr-value" dir="ltr" href="mailto:${escapeHtml(lead.email)}">${escapeHtml(lead.email)}</a>` : "<strong>לא צוין</strong>"}</div>
       <div class="detail-row"><small>סוג אירוע או פנייה</small><strong>${escapeHtml(lead.interest || "לא צוין")}</strong></div>
-      <div class="detail-row"><small>תאריך</small><strong>${escapeHtml(lead.date || "לא צוין")}</strong></div>
+      <div class="detail-row"><small>תאריך</small><strong class="ltr-value">${escapeHtml(lead.date || "לא צוין")}</strong></div>
       <div class="detail-row"><small>מקום</small><strong>${escapeHtml([lead.country, lead.city].filter(Boolean).join(", ") || "לא צוין")}</strong></div>
       <div class="detail-row"><small>מספר משתתפים</small><strong>${escapeHtml(lead.participants || "לא צוין")}</strong></div>
       <div class="detail-row"><small>פרטים נוספים</small><span>${escapeHtml(lead.message || "לא נכתבו פרטים נוספים")}</span></div>
@@ -243,10 +261,12 @@ const selectLead = (id) => {
     <div class="detail-actions">
       ${["pending", "new"].includes(lead.status) ? '<button class="btn btn-primary" id="approve-lead" type="button">אישור הבקשה</button><button class="btn" id="decline-lead" type="button">אי אישור</button>' : ""}
       <button class="btn btn-primary" id="save-lead" type="button">שמירת עדכון</button>
-      <a class="btn" href="${whatsappHref(lead.phone, lead.name)}" target="_blank" rel="noopener">וואטסאפ</a>
-      <a class="btn" href="${phoneHref(lead.phone)}">חיוג</a>
+      ${lead.phone ? `<a class="btn" href="${whatsappHref(lead.phone, lead.name)}" target="_blank" rel="noopener">וואטסאפ</a><a class="btn" href="${phoneHref(lead.phone)}">חיוג</a>` : ""}
     </div>
   `;
+
+  leadDetail.querySelector(".detail-close")?.addEventListener("click", () => closeLeadDetail());
+  if (reveal) revealLeadDetail();
 
   document.querySelector("#approve-lead")?.addEventListener("click", async (event) => {
     if (!(await confirmAction({ title: "לאשר את הבקשה?", message: "הסטטוס ישתנה לאושר ויישמר במערכת.", approveLabel: "אישור הבקשה" }))) return;
@@ -323,7 +343,7 @@ const startRealtime = () => {
   unsubscribeLeads = onSnapshot(query(collection(db, "leads"), orderBy("createdAt", "desc")), (snapshot) => {
     leads = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
     renderLeads();
-    if (selectedLeadId) selectLead(selectedLeadId);
+    if (selectedLeadId) selectLead(selectedLeadId, { reveal: leadDetail.classList.contains("is-open") });
   }, () => {
     leadList.innerHTML = '<div class="empty">לא הצלחנו לטעון את הפניות. רעננו את העמוד ונסו שוב.</div>';
   });
@@ -345,6 +365,15 @@ loginButton.addEventListener("click", async () => {
 logoutButton.addEventListener("click", () => signOut(auth));
 searchInput.addEventListener("input", renderLeads);
 statusFilter.addEventListener("change", renderLeads);
+leadDetailBackdrop?.addEventListener("click", () => closeLeadDetail());
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && leadDetail.classList.contains("is-open")) closeLeadDetail();
+});
+document.querySelectorAll("[data-admin-view]").forEach((button) => {
+  button.addEventListener("click", () => {
+    if (button.dataset.adminView !== "crm") closeLeadDetail({ restoreFocus: false });
+  });
+});
 
 taskForm.addEventListener("submit", async (event) => {
   event.preventDefault();
