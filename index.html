@@ -2573,6 +2573,9 @@
       const whatsappWindow = window.open("about:blank", "_blank");
       let saved = false;
       try {
+        if (typeof window.ensureAmitLeadCapture === "function") {
+          await window.ensureAmitLeadCapture();
+        }
         if (typeof window.saveAmitLead === "function") {
           await window.saveAmitLead(data);
           saved = true;

@@ -2,14 +2,31 @@
   const scriptBase = document.currentScript?.src
     || [...document.scripts].find((script) => /\/assets\/share\.js(?:$|\?)/.test(script.src))?.src;
   if (scriptBase) {
-    import(new URL("cms-runtime.js?v=3", scriptBase).href).catch((error) => {
+    import(new URL("cms-runtime.js?v=4", scriptBase).href).catch((error) => {
       console.warn("Site content editor runtime could not be loaded.", error);
       document.documentElement.dataset.cmsError = error?.message || "load-failed";
     });
-    import(new URL("lead-capture.js?v=3", scriptBase).href).catch((error) => {
-      console.warn("Site CRM could not be loaded.", error);
-      document.documentElement.dataset.crmError = error?.message || "load-failed";
+    let leadCapturePromise;
+    const loadLeadCapture = () => {
+      leadCapturePromise ||= import(new URL("lead-capture.js?v=4", scriptBase).href).catch((error) => {
+        console.warn("Site CRM could not be loaded.", error);
+        document.documentElement.dataset.crmError = error?.message || "load-failed";
+        throw error;
+      });
+      return leadCapturePromise;
+    };
+    window.ensureAmitLeadCapture = loadLeadCapture;
+
+    const needsLeadCapture = (target) => target instanceof Element
+      && Boolean(target.closest("form, [data-commerce-open], #contact, [href='#contact']"));
+    ["pointerdown", "focusin", "input"].forEach((eventName) => {
+      document.addEventListener(eventName, (event) => {
+        if (needsLeadCapture(event.target)) loadLeadCapture();
+      }, { capture: true, passive: true });
     });
+    document.addEventListener("submit", (event) => {
+      if (event.target instanceof HTMLFormElement) loadLeadCapture();
+    }, { capture: true });
   }
 
   const copy = {
@@ -221,3 +238,4 @@
     if (!panel.hidden && !root.contains(event.target)) closePanel();
   });
 })();
+

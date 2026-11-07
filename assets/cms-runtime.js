@@ -385,13 +385,30 @@ const applyOverrides = (overrides = {}) => {
 
 const fetchPublishedOverrides = async () => {
   const id = pageId();
-  const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/${COLLECTION_NAME}/${id}?key=${FIREBASE_API_KEY}`;
+  const documentName = `projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/${COLLECTION_NAME}/${id}`;
+  const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents:runQuery?key=${FIREBASE_API_KEY}`;
   try {
-    const response = await fetch(url, { headers: { Accept: "application/json" } });
-    if (response.status === 404 || response.status === 403) return {};
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({
+        structuredQuery: {
+          from: [{ collectionId: COLLECTION_NAME }],
+          where: {
+            fieldFilter: {
+              field: { fieldPath: "__name__" },
+              op: "EQUAL",
+              value: { referenceValue: documentName }
+            }
+          },
+          limit: 1
+        }
+      })
+    });
+    if (response.status === 403) return {};
     if (!response.ok) throw new Error(`CMS request failed with ${response.status}`);
-    const documentData = await response.json();
-    const payload = documentData?.fields?.payload?.stringValue;
+    const results = await response.json();
+    const payload = results?.[0]?.document?.fields?.payload?.stringValue;
     return payload ? JSON.parse(payload) : {};
   } catch (error) {
     console.warn("Site content could not be loaded.", error);

@@ -70,7 +70,17 @@
     return true;
   };
 
-  writeAggregateEvent("page_view");
+  // GA4/GTM records the immediate page view. The private aggregate copy is
+  // intentionally delayed so Firebase does not compete with the first paint.
+  const scheduleAggregatePageView = () => {
+    window.setTimeout(() => {
+      const save = () => writeAggregateEvent("page_view");
+      if ("requestIdleCallback" in window) window.requestIdleCallback(save, { timeout: 3000 });
+      else save();
+    }, 12000);
+  };
+  if (document.readyState === "complete") scheduleAggregatePageView();
+  else window.addEventListener("load", scheduleAggregatePageView, { once: true });
 
   document.addEventListener("click", (event) => {
     const link = event.target.closest("a[href]");
