@@ -2,14 +2,16 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#08070d">
   <meta name="robots" content="noindex,nofollow">
   <title>פותחים הזמנה…</title>
+  <style>html,body{min-height:100vh;min-height:100svh;margin:0;background:#08070d;color:#f8f6fb;font-family:Arial,sans-serif}body{display:grid;place-content:center;justify-items:center;gap:14px;text-align:center}.brand{font-size:25px;font-weight:900}.brand b{color:#f0c467}.spinner{width:38px;height:38px;border:3px solid rgba(240,196,103,.22);border-top-color:#f0c467;border-radius:50%;animation:spin .75s linear infinite}p{margin:0;color:#bdb7c8}@keyframes spin{to{transform:rotate(360deg)}}</style>
   <script>
     const id=new URLSearchParams(location.search).get("id")||"";
     if(/^[A-Za-z0-9_-]{10,80}$/.test(id))location.replace(`digital-invitation.html?id=${encodeURIComponent(id)}`);
     else location.replace("/");
   </script>
 </head>
-<body>פותחים את ההזמנה…</body>
+<body><span class="brand">עמית <b>מיטרני</b></span><i class="spinner" aria-hidden="true"></i><p>פותחים את ההזמנה…</p></body>
 </html>
