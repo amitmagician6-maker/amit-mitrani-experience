@@ -2884,8 +2884,10 @@
       worldModal.querySelector(".world-close").focus();
     };
     document.querySelectorAll(".service-card, .course-card, .tool-card, .business-card").forEach((card) => {
+      const heading = card.querySelector("h3");
+      if (!heading) return;
       const type = card.classList.contains("service-card") ? "service" : card.classList.contains("course-card") ? "course" : card.classList.contains("tool-card") ? "tool" : "business";
-      const title = card.querySelector("h3").textContent;
+      const title = heading.textContent;
       const servicePages = {
         "ימי הולדת לילדים": "shows-for-kids.html",
         "משפחות ואירועים פרטיים": "shows-for-families.html",
