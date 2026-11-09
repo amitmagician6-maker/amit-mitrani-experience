@@ -144,8 +144,12 @@
     .mini-video { min-height: 220px; border-radius: 23px; border: 1px solid var(--line); background: linear-gradient(145deg, #1b1727, #111018); padding: 24px; display: flex; flex-direction: column; justify-content: end; }
     .mini-video b { font-size: 20px; margin-bottom: 5px; }
     .mini-video span { color: var(--muted); font-size: 14px; }
-    .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+    .grid-4,.service-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
     .service-card { min-height: 250px; border: 1px solid var(--line); border-radius: 22px; padding: 24px; background: linear-gradient(180deg, var(--panel-2), var(--panel)); }
+    .service-grid .service-card { display:flex;flex-direction:column;justify-content:flex-end;text-decoration:none }
+    .service-grid .service-card span { color:var(--gold);font-size:13px;font-weight:800 }
+    .service-grid .service-card strong { margin:8px 0 5px;color:var(--white);font-size:21px }
+    .service-grid .service-card small { color:var(--muted);line-height:1.55 }
     .number { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; color: #17111d; background: var(--gold); font-weight: 900; margin-bottom: 38px; }
     .service-card h3 { margin: 0 0 8px; font-size: 21px; }
     .service-card p { margin: 0; color: var(--muted); line-height: 1.65; font-size: 14px; }
@@ -1631,6 +1635,7 @@
         </form>
       </div>
     </section>
+    <section class="section" aria-labelledby="local-service-title"><div class="shell"><div class="section-head"><div class="kicker">מופעים קרוב אליכם</div><h2 id="local-service-title">קוסם, אמן חושים ומנטליסט במרכז</h2><p>עמית יוצא מראשון לציון ומגיע לאירועים פרטיים, משפחתיים ועסקיים ברחבי המרכז. בעמודים המקומיים אפשר להבין איזה פורמט מתאים לאירוע בעיר שלכם ומה כדאי למסור לבדיקת זמינות.</p></div><div class="service-grid"><a class="service-card" href="magician-mentalist-central-israel.html"><span>אזור המרכז</span><strong>קוסם ואמן חושים במרכז</strong><small>כל סוגי האירועים והערים המרכזיות</small></a><a class="service-card" href="magician-mentalist-rishon-lezion.html"><span>ראשון לציון</span><strong>מופעים בעיר הבית</strong><small>ילדים, משפחות, מבוגרים וחברות</small></a><a class="service-card" href="magician-mentalist-tel-aviv.html"><span>תל אביב-יפו</span><strong>מנטליסט וקוסם לאירועים</strong><small>אירועים פרטיים, עסקיים וקבלות פנים</small></a></div></div></section>
     <section aria-labelledby="pricing-guide-title"><div class="shell"><div class="lang-box"><div class="kicker">מדריך לתכנון האירוע</div><h2 id="pricing-guide-title">כמה עולה קוסם לאירוע?</h2><p>המחיר מושפע מסוג האירוע, הקהל, המיקום, הפורמט ודרישות ההפקה. הכנו מדריך שמסביר מה כדאי למסור, מה להשוות ואיך לבחור מופע שמתאים לאירוע.</p><a class="btn btn-ghost" href="guide-magician-pricing.html">למדריך המחיר ובחירת המופע</a></div></div></section>
   </main>
   <div class="shell" style="padding-bottom:18px;text-align:center"><a href="admin.html" rel="nofollow" style="color:#85818f;font-size:13px">כניסה למערכת הניהול</a></div>

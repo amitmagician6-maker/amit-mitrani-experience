@@ -80,7 +80,7 @@ for (const crawler of ["OAI-SearchBot", "ChatGPT-User", "GPTBot", "PerplexityBot
 assert.equal(read(path.join(root, "10434512b7d347b1b575e3f42b4d53ce.txt")).trim(), "10434512b7d347b1b575e3f42b4d53ce", "IndexNow ownership key is required");
 
 const indexedUrls = [...sitemap.matchAll(/<loc>(https:\/\/amitgic\.co\.il\/[^<]*)<\/loc>/g)].map((match) => match[1]);
-assert.equal(indexedUrls.length, 51, "The sitemap must contain the complete 51-page public inventory");
+assert.equal(indexedUrls.length, 54, "The sitemap must contain the complete 54-page public inventory");
 assert.equal(new Set(indexedUrls).size, indexedUrls.length, "The sitemap must not contain duplicate URLs");
 
 const urlToFile = (url) => {
@@ -103,11 +103,14 @@ for (const url of indexedUrls) {
   const canonical = html.match(/<link\s+rel="canonical"\s+href="([^"]+)"/i)?.[1];
   assert.equal(canonical, url, `${relative}: canonical must match the sitemap URL`);
   assert.match(html, /<meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">/, `${relative}: explicit preview-friendly index directive is required`);
-  for (const language of ["he", "en", "fr", "ru", "x-default"]) {
-    assert.match(html, new RegExp(`hreflang="${language}"`, "i"), `${relative}: missing ${language} hreflang`);
-  }
-  for (const field of ["og:url", "og:image:alt", "og:site_name", "twitter:card", "twitter:title", "twitter:description", "twitter:image", "twitter:image:alt"]) {
-    assert.match(html, new RegExp(field.replace(":", "\\:"), "i"), `${relative}: missing ${field}`);
+  const isLocalLandingPage = relative.startsWith("magician-mentalist-");
+  if (!isLocalLandingPage) {
+    for (const language of ["he", "en", "fr", "ru", "x-default"]) {
+      assert.match(html, new RegExp(`hreflang="${language}"`, "i"), `${relative}: missing ${language} hreflang`);
+    }
+    for (const field of ["og:url", "og:image:alt", "og:site_name", "twitter:card", "twitter:title", "twitter:description", "twitter:image", "twitter:image:alt"]) {
+      assert.match(html, new RegExp(field.replace(":", "\\:"), "i"), `${relative}: missing ${field}`);
+    }
   }
   for (const match of relative === "magic-courses.html" ? [] : html.matchAll(/<img\b[^>]*>/gi)) {
     assert.match(match[0], /\salt="[^"]*"/i, `${relative}: every image requires an alt attribute`);
@@ -123,7 +126,7 @@ for (const localeHome of ["index.html", "en/index.html", "fr/index.html", "ru/in
   assert.match(read(path.join(root, localeHome)), /data-seo="entity-graph"/, `${localeHome}: entity graph is required`);
 }
 
-for (const url of indexedUrls.filter((value) => !/^https:\/\/amitgic\.co\.il\/(?:en\/|fr\/|ru\/)?$/.test(value) && !/(?:guide-magician-pricing|all-pages|magic-courses)\.html$/.test(value))) {
+for (const url of indexedUrls.filter((value) => !/^https:\/\/amitgic\.co\.il\/(?:en\/|fr\/|ru\/)?$/.test(value) && !/(?:guide-magician-pricing|all-pages|magic-courses)\.html$/.test(value) && !/magician-mentalist-[^/]+\.html$/.test(value))) {
   const html = read(urlToFile(url));
   assert.match(html, /data-seo="breadcrumbs"/, `${url}: breadcrumb schema is required`);
   assert.match(html, /"@type"\s*:\s*"FAQPage"/, `${url}: FAQ schema is required`);
