@@ -2552,6 +2552,7 @@
       event.preventDefault();
       const form = event.currentTarget;
       const error = document.querySelector("#form-error");
+      if (form.dataset.leadSubmitting === "true") return;
       if (!form.checkValidity()) {
         error.textContent = "צריך למלא שם, טלפון ולבחור נושא.";
         form.reportValidity();
@@ -2563,6 +2564,13 @@
         return;
       }
       error.textContent = "";
+      form.dataset.leadSubmitting = "true";
+      const submitButton = form.querySelector('[type="submit"]');
+      const originalSubmitLabel = submitButton?.textContent || "";
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = "שומר את הפנייה…";
+      }
       const data = new FormData(form);
       const message = [
         "היי עמית, פנייה חדשה מהאתר.",
@@ -2587,6 +2595,11 @@
           saved = true;
         }
       } catch (saveError) {}
+      if (submitButton) {
+        submitButton.textContent = saved ? "הפנייה נשמרה ✓" : originalSubmitLabel;
+        submitButton.disabled = saved;
+      }
+      if (!saved) form.dataset.leadSubmitting = "false";
       showToast(saved
         ? "הפנייה נשמרה אצל עמית. וואטסאפ ייפתח כדי שתוכלו לשלוח גם הודעה ישירה."
         : "וואטסאפ ייפתח כדי שתוכלו לשלוח את הפנייה ישירות לעמית.");
@@ -2921,7 +2934,7 @@
         if (loaded) return;
         loaded = true;
         const script = document.createElement("script");
-        script.src = "assets/share.js?v=4";
+        script.src = "assets/share.js?v=5";
         script.async = true;
         document.body.append(script);
       };

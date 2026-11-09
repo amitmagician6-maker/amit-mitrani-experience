@@ -8,7 +8,7 @@
     });
     let leadCapturePromise;
     const loadLeadCapture = () => {
-      leadCapturePromise ||= import(new URL("lead-capture.js?v=4", scriptBase).href).catch((error) => {
+      leadCapturePromise ||= import(new URL("lead-capture.js?v=5", scriptBase).href).catch((error) => {
         console.warn("Site CRM could not be loaded.", error);
         document.documentElement.dataset.crmError = error?.message || "load-failed";
         throw error;

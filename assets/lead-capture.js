@@ -7,8 +7,34 @@ import {
 
 const ATTRIBUTION_KEY = "amitLeadAttributionV1";
 const ATTRIBUTION_MAX_AGE = 90 * 24 * 60 * 60 * 1000;
+const RECENT_LEADS_KEY = "amitRecentLeadSubmissionsV1";
+const DUPLICATE_WINDOW = 10 * 60 * 1000;
+const pendingLeadSaves = new Map();
 
 const limited = (value, limit = 500) => String(value || "").trim().slice(0, limit);
+
+const leadFingerprint = async (formData) => {
+  const fields = ["name", "phone", "email", "interest", "product", "date", "country", "city", "participants", "message", "notes"];
+  const normalized = fields.map((name) => `${name}:${limited(formData.get(name), 1500).toLowerCase()}`).join("|");
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${location.pathname}|${normalized}`));
+  return [...new Uint8Array(digest)].map((value) => value.toString(16).padStart(2, "0")).join("");
+};
+
+const readRecentLeads = () => {
+  try {
+    const now = Date.now();
+    return Object.fromEntries(Object.entries(JSON.parse(localStorage.getItem(RECENT_LEADS_KEY) || "{}"))
+      .filter(([, entry]) => entry?.id && now - Number(entry.savedAt || 0) < DUPLICATE_WINDOW));
+  } catch { return {}; }
+};
+
+const rememberLead = (fingerprint, id) => {
+  try {
+    const recent = readRecentLeads();
+    recent[fingerprint] = { id, savedAt: Date.now() };
+    localStorage.setItem(RECENT_LEADS_KEY, JSON.stringify(recent));
+  } catch {}
+};
 
 const detectAttribution = () => {
   const url = new URL(location.href);
@@ -69,6 +95,11 @@ if (!leadAttribution || hasCampaignSignal) {
 }
 
 window.saveAmitLead = async (formData) => {
+  const fingerprint = await leadFingerprint(formData);
+  const recent = readRecentLeads()[fingerprint];
+  if (recent) return recent.id;
+  if (pendingLeadSaves.has(fingerprint)) return pendingLeadSaves.get(fingerprint);
+
   const clean = (name, limit = 500) => String(formData.get(name) || "").trim().slice(0, limit);
   const isBookingRequest = Boolean(formData.get("product"));
   const payload = {
@@ -99,14 +130,20 @@ window.saveAmitLead = async (formData) => {
     updatedAt: serverTimestamp()
   };
 
-  const result = await addDoc(collection(db, "leads"), payload);
-  document.dispatchEvent(new CustomEvent("amit:lead-saved", {
-    detail: {
-      leadId: result.id,
-      formName: isBookingRequest ? "booking_request" : "contact_request"
-    }
-  }));
-  return result.id;
+  const save = (async () => {
+    const result = await addDoc(collection(db, "leads"), payload);
+    rememberLead(fingerprint, result.id);
+    document.dispatchEvent(new CustomEvent("amit:lead-saved", {
+      detail: {
+        leadId: result.id,
+        formName: isBookingRequest ? "booking_request" : "contact_request"
+      }
+    }));
+    return result.id;
+  })();
+  pendingLeadSaves.set(fingerprint, save);
+  try { return await save; }
+  finally { pendingLeadSaves.delete(fingerprint); }
 };
 
 const attachBookingForms = () => {
@@ -119,6 +156,12 @@ const attachBookingForms = () => {
       form.dataset.crmSaving = "true";
 
       const status = document.querySelector("#commerce-error");
+      const submit = form.querySelector('[type="submit"]');
+      const originalLabel = submit?.textContent || "";
+      if (submit) {
+        submit.disabled = true;
+        submit.textContent = "שומר את הפנייה…";
+      }
       const data = new FormData(form);
       const generatedNumber = document.querySelector("#order-number")?.textContent?.trim()
         || `EVENT-${Date.now().toString().slice(-7)}`;
@@ -126,11 +169,16 @@ const attachBookingForms = () => {
 
       try {
         await window.saveAmitLead(data);
+        if (submit) submit.textContent = "הפנייה נשמרה ✓";
         const success = document.querySelector("#success-message");
         if (success) {
           success.textContent = "בקשת ההזמנה נשמרה במערכת וממתינה לאישור עמית. אפשר לשלוח גם הודעת וואטסאפ.";
         }
       } catch (error) {
+        if (submit) {
+          submit.disabled = false;
+          submit.textContent = originalLabel;
+        }
         if (status) {
           status.textContent = "הפנייה לא נשמרה במערכת. אפשר לשלוח אותה בוואטסאפ ולנסות שוב מאוחר יותר.";
         }

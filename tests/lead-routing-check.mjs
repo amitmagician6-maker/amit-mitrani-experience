@@ -24,6 +24,12 @@ const capture = read("assets/lead-capture.js");
 for (const field of ["source", "medium", "campaign", "content", "term", "referrer", "landingPage", "formPage", "utmParameters"]) {
   assert.match(capture, new RegExp(`${field}:`), `Lead capture is missing ${field}`);
 }
+assert.match(capture, /pendingLeadSaves\.has\(fingerprint\)/, "Lead capture must reuse an in-flight save");
+assert.match(capture, /RECENT_LEADS_KEY/, "Lead capture must remember recent submissions");
+assert.match(capture, /DUPLICATE_WINDOW/, "Lead capture must limit the duplicate protection window");
+assert.match(capture, /שומר את הפנייה…/, "Booking forms must show immediate save feedback");
+assert.match(read("index.html"), /form\.dataset\.leadSubmitting === "true"/, "Homepage lead form must lock repeated submits");
+assert.match(read("index.html"), /הפנייה נשמרה ✓/, "Homepage lead form must confirm a successful save");
 
 const formPages = [
   "index.html", "business-magic.html", "close-up-magic-receptions.html",
@@ -34,7 +40,7 @@ const formPages = [
 for (const file of formPages) {
   const html = read(file);
   assert.match(html, /<form/i, `${file} should contain a customer form`);
-  assert.match(html, /share\.js\?v=4/, `${file} should load the current lead capture bundle`);
+  assert.match(html, /share\.js\?v=5/, `${file} should load the current lead capture bundle`);
 }
 
 console.log(`PASS: lead routing and attribution checks (${formPages.length} forms)`);
