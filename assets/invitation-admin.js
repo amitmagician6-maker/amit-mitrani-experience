@@ -1,7 +1,7 @@
 import { db } from "./firebase-config.js";
-import { collection,deleteDoc,doc,getDocs,onSnapshot,orderBy,query,serverTimestamp,setDoc,updateDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+import { collection,deleteDoc,doc,getDocs,getDocsFromServer,onSnapshot,serverTimestamp,setDoc,updateDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-let started=false,items=[],managementTokens={},searchText="",expiryMigrationDone=false;
+let started=false,items=[],managementTokens={},searchText="";
 const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const date=value=>value?new Intl.DateTimeFormat("he-IL",{dateStyle:"medium"}).format(new Date(`${value}T12:00:00`)):"";
 const hashCode=async value=>Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(String(value).toUpperCase())))).map(x=>x.toString(16).padStart(2,"0")).join("");
@@ -22,9 +22,12 @@ export const startInvitationAdmin=()=>{
   const linkButton=document.querySelector("#create-invitation-link");
   if(linkButton)linkButton.onclick=async()=>{linkButton.disabled=true;try{const token=strongToken(),id=await hashCode(token.toUpperCase()),expiresAt=new Date();expiresAt.setDate(expiresAt.getDate()+30);await setDoc(doc(db,"invitationAccess",id),{active:true,used:false,type:"personal-link",expiresAt,createdAt:serverTimestamp()});const url=`${location.origin}/digital-invitation.html?access=${encodeURIComponent(token)}`;codeResult.hidden=false;codeResult.innerHTML=`<b>הקישור האישי מוכן</b><p>הקישור תקף להזמנה אחת ולמשך 30 יום. שלח אותו ללקוח ב־WhatsApp:</p><p><a href="${url}" target="_blank" rel="noopener">${url}</a></p><button class="btn btn-primary" type="button">העתקת הקישור ללקוח</button>`;codeResult.querySelector("button").onclick=async()=>{await navigator.clipboard.writeText(`היי, זה הקישור האישי שלך להכנת ההזמנה הדיגיטלית:\n${url}`);codeResult.querySelector("button").textContent="הקישור הועתק ✓"}}catch(error){console.error(error);alert("לא הצלחנו ליצור קישור אישי.")}finally{linkButton.disabled=false}};
   if(codeButton)codeButton.onclick=async()=>{codeButton.disabled=true;try{const code=`AM-${crypto.getRandomValues(new Uint32Array(1))[0].toString().slice(0,6).padStart(6,"0")}`,id=await hashCode(code);await setDoc(doc(db,"invitationAccess",id),{active:true,used:false,createdAt:serverTimestamp()});const url=`${location.origin}/digital-invitation.html`;codeResult.hidden=false;codeResult.innerHTML=`<b>קוד חדש: <span>${code}</span></b><p>שלח ללקוח את הקוד ואת הקישור: <a href="${url}" target="_blank" rel="noopener">${url}</a></p><button class="btn" type="button">העתקת קוד וקישור</button>`;codeResult.querySelector("button").onclick=async()=>{await navigator.clipboard.writeText(`קוד להכנת ההזמנה: ${code}\n${url}`);codeResult.querySelector("button").textContent="הועתק ✓"}}catch(error){console.error(error);alert("לא הצלחנו ליצור קוד.")}finally{codeButton.disabled=false}};
-  onSnapshot(query(collection(db,"invitations"),orderBy("createdAt","desc")),async snapshot=>{
-    items=await Promise.all(snapshot.docs.map(async entry=>{const responses=await getDocs(collection(db,"invitations",entry.id,"responses"));return{id:entry.id,...entry.data(),responses:responses.docs.map(x=>({id:x.id,...x.data()}))}}));render(list,stats,pastList);
-    if(!expiryMigrationDone){expiryMigrationDone=true;const changes=items.filter(item=>{const desired=sevenDaysAfterEvent(item.eventDate),current=item.expiresAt?.toDate?.();return desired&&(!current||current<desired)}).map(item=>updateDoc(doc(db,"invitations",item.id),{expiresAt:sevenDaysAfterEvent(item.eventDate)}));if(changes.length)Promise.all(changes).catch(console.error)}
+  const renderSnapshot=async snapshot=>{items=await Promise.all(snapshot.docs.map(async entry=>{const responses=await getDocs(collection(db,"invitations",entry.id,"responses"));return{id:entry.id,...entry.data(),responses:responses.docs.map(x=>({id:x.id,...x.data()}))}}));render(list,stats,pastList)};
+  const invitations=collection(db,"invitations");
+  onSnapshot(invitations,async snapshot=>{
+    // A stale offline cache must never make the admin look as though invitations were deleted.
+    if(snapshot.empty&&snapshot.metadata.fromCache){list.innerHTML='<p class="empty">טוען את ההזמנות…</p>';try{const serverSnapshot=await getDocsFromServer(invitations);await renderSnapshot(serverSnapshot)}catch(error){console.error(error);list.innerHTML='<p class="empty">לא הצלחנו להתחבר לנתוני ההזמנות. נסו שוב ברענון.</p>'}return}
+    await renderSnapshot(snapshot);
   },error=>{console.error(error);list.innerHTML='<p class="empty">לא הצלחנו לטעון את ההזמנות.</p>'});
 };
 
