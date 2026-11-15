@@ -94,7 +94,7 @@ service cloud.firestore {
     match /invitations/{invitationId} {
       allow create: if request.resource.data.keys().hasOnly([
         'name', 'celebrants', 'firstName', 'age', 'gender', 'secondName', 'secondAge', 'secondGender', 'messageMode', 'eventDate', 'eventTime', 'venueName', 'address',
-        'location', 'message', 'theme', 'photoData', 'contacts', 'wazeEnabled', 'clientCanEdit', 'status', 'accessCodeId',
+        'location', 'message', 'theme', 'photoData', 'contacts', 'wazeEnabled', 'clientCanEdit', 'pizzaCalculatorEnabled', 'status', 'accessCodeId',
         'managementTokenHash', 'expiresAt', 'createdAt'
       ])
       && request.resource.data.name is string
@@ -132,6 +132,7 @@ service cloud.firestore {
       && request.resource.data.contacts.size() <= 10
       && request.resource.data.wazeEnabled is bool
       && request.resource.data.clientCanEdit == true
+      && request.resource.data.pizzaCalculatorEnabled == true
       && request.resource.data.status == 'active'
       && request.resource.data.managementTokenHash is string
       && request.resource.data.managementTokenHash.size() == 64
