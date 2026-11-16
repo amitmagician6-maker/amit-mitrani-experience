@@ -648,7 +648,7 @@
         const delivery = arrival + 50;
         const serving = delivery + 20;
         serveTime.textContent = formatTime(serving);
-        timingResult.innerHTML = `<strong>לתאם את הפיצה ל־${formatTime(delivery)}</strong><br><b>חלוקה ב־${formatTime(serving)}</b><br><small>20 דקות מרווח לאיחור קטן ולקירור נוח לפני ההגשה.</small>`;
+        timingResult.innerHTML = `<strong>לתאם את הפיצה: ${formatTime(delivery)}</strong><br><b>זמן החלוקה: ${formatTime(serving)}</b><br><small>20 דקות מרווח לאיחור קטן ולקירור נוח לפני ההגשה.</small>`;
       };
       const updateFoodPlan = () => {
         const guests = Number(foodRange.value);
