@@ -648,7 +648,7 @@
         const delivery = arrival + 50;
         const serving = delivery + 20;
         serveTime.textContent = formatTime(serving);
-        timingResult.innerHTML = `<strong>מומלץ לתאם הגעת פיצה ל־${formatTime(delivery)}</strong><br>החלוקה מתוכננת לשעה ${formatTime(serving)}. קודם נותנים לילדים 50 דקות להגיע ולהיכנס לאווירה, ואז משאירים עוד 20 דקות: אם הפיצה מגיעה בזמן היא מתקררת מעט ולא מחלקים לילדים פיצה רותחת; ואם היא מתעכבת בכ־10 דקות, עדיין נשאר מרווח נוח לפני החלוקה.`;
+        timingResult.innerHTML = `<strong>לתאם את הפיצה ל־${formatTime(delivery)}</strong><br><b>חלוקה ב־${formatTime(serving)}</b><br><small>20 דקות מרווח לאיחור קטן ולקירור נוח לפני ההגשה.</small>`;
       };
       const updateFoodPlan = () => {
         const guests = Number(foodRange.value);
