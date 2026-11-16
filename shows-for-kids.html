@@ -644,10 +644,10 @@
         if (!kidsTime || !serveTime || !timingResult) return;
         const arrival = timeToMinutes(kidsTime.value);
         if (arrival === null) { timingResult.textContent = "בחרו את שעת הגעת הילדים."; return; }
-        const serving = arrival + 60;
-        const delivery = serving - 20;
+        const delivery = arrival + 50;
+        const serving = delivery + 20;
         serveTime.textContent = formatTime(serving);
-        timingResult.innerHTML = `<strong>מומלץ לתאם הגעת פיצה ל־${formatTime(delivery)}</strong><br>החלוקה מתוכננת לשעה ${formatTime(serving)}, בערך שעה אחרי הגעת הילדים. השארנו 20 דקות: אם הפיצה מגיעה בזמן היא מתקררת מעט ולא מחלקים לילדים פיצה רותחת; ואם היא מתעכבת בכ־10 דקות, עדיין נשאר מרווח נוח. כך הילדים מספיקים להגיע, להיכנס לאווירה ורק אחר כך לעצור לאוכל.`;
+        timingResult.innerHTML = `<strong>מומלץ לתאם הגעת פיצה ל־${formatTime(delivery)}</strong><br>החלוקה מתוכננת לשעה ${formatTime(serving)}. קודם נותנים לילדים 50 דקות להגיע ולהיכנס לאווירה, ואז משאירים עוד 20 דקות: אם הפיצה מגיעה בזמן היא מתקררת מעט ולא מחלקים לילדים פיצה רותחת; ואם היא מתעכבת בכ־10 דקות, עדיין נשאר מרווח נוח לפני החלוקה.`;
       };
       const updateFoodPlan = () => {
         const guests = Number(foodRange.value);
