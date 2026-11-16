@@ -636,6 +636,7 @@
       const kidsTime = document.querySelector("#pizza-kids-time");
       const serveTime = document.querySelector("#pizza-serve-time");
       const timingResult = document.querySelector("#pizza-timing-result");
+      if (kidsTime?.value === "17:10") kidsTime.value = "17:00";
       const foodPreferences = { gluten:false, vegan:false, nuts:false };
       let parentsEat = false;
       const timeToMinutes = value => { const [hours, minutes] = String(value || "").split(":").map(Number); return Number.isInteger(hours) && Number.isInteger(minutes) ? hours * 60 + minutes : null; };
