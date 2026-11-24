@@ -225,11 +225,12 @@ export const submitInvitationRequest = onRequest({ region: "me-west1", cors: tru
     for (let index = 0; index < images.length; index += 1) {
       const image = images[index] || {}, encoded = String(image.data || ""), contentType = String(image.contentType || "");
       const childIndex = Number.isInteger(image.childIndex) && image.childIndex >= 0 && image.childIndex < children.length ? image.childIndex : null;
-      if (!/^image\/(jpeg|png|webp)$/.test(contentType) || !/^[A-Za-z0-9+/=]+$/.test(encoded) || encoded.length > 420000) throw new Error("image");
-      const extension = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
+      const imageLimit = /^image\/(heic|heif)$/.test(contentType) ? 4200000 : 420000;
+      if (!/^image\/(jpeg|png|webp|heic|heif)$/.test(contentType) || !/^[A-Za-z0-9+/=]+$/.test(encoded) || encoded.length > imageLimit) throw new Error("image");
+      const extension = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : contentType === "image/heic" ? "heic" : contentType === "image/heif" ? "heif" : "jpg";
       const path = `invitation-request-media/${requestRef.id}/${index}.${extension}`;
       await getStorage().bucket().file(path).save(Buffer.from(encoded, "base64"), { metadata: { contentType } });
-      storedImages.push({ path, childIndex, name: text(image.name, "תמונה").slice(0, 100) });
+      storedImages.push({ path, childIndex, contentType, name: text(image.name, "תמונה").slice(0, 100) });
     }
     await db.runTransaction(async transaction => {
       const fresh = await transaction.get(accessRef), data = fresh.data();

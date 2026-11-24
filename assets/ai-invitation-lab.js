@@ -14,7 +14,7 @@ const render=async items=>{
   if(!items.length){list.innerHTML='<p class="empty">עדיין לא התקבלו בקשות.</p>';return}
   const cards=await Promise.all(items.map(async item=>{
     const children=Array.isArray(item.children)?item.children:[],images=Array.isArray(item.images)?item.images:[];
-    const thumbs=await Promise.all(images.slice(0,4).map(async image=>{try{return `<img src="${await getDownloadURL(ref(storage,image.path))}" alt="תמונה שנשלחה בבקשה">`}catch{return ""}}));
+    const thumbs=await Promise.all(images.slice(0,4).map(async image=>{try{const url=await getDownloadURL(ref(storage,image.path));return /^image\/(heic|heif)$/.test(image.contentType||"")?`<a class="heic-file" href="${url}" target="_blank" rel="noopener">פתיחת תמונת iPhone</a>`:`<img src="${url}" alt="תמונה שנשלחה בבקשה">`}catch{return ""}}));
     const names=children.map(child=>child.name).filter(Boolean).join(" ו ")||"ללא שם";
     const address=[item.street,item.houseNumber,item.city].filter(Boolean).join(" ");
     return `<article class="request-item"><div><strong>${escape(names)}</strong><p>${escape(item.eventDate)} · ${escape(item.eventTime)} · ${escape(item.style||"ללא סגנון")}</p><small><b>כתובת:</b> ${escape(address)}${item.venueType?` — ${escape(item.venueType)}`:""}${item.venueDetails?`, ${escape(item.venueDetails)}`:""}</small><small><b>איש קשר:</b> ${escape(item.contactName)} · ${escape(item.contactPhone)}</small>${thumbs.some(Boolean)?`<div class="request-images">${thumbs.join("")}</div>`:""}</div><small>${date(item.createdAt)||"חדש"}<br>${images.length} תמונות</small></article>`;
