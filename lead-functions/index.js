@@ -212,7 +212,10 @@ export const submitInvitationRequest = onRequest({ region: "me-west1", cors: tru
   const eventDate = text(body.eventDate, ""), eventTime = text(body.eventTime, ""), style = text(body.style, "").slice(0, 80);
   const city = text(body.city, "").slice(0, 60), street = text(body.street, "").slice(0, 80), houseNumber = text(body.houseNumber, "").slice(0, 12), venueType = text(body.venueType, "").slice(0, 30), venueDetails = text(body.venueDetails, "").slice(0, 120), contactName = text(body.contactName, "").slice(0, 50), contactPhone = text(body.contactPhone, "").replace(/[^+\d\-() ]/g, "").slice(0, 30);
   const images = Array.isArray(body.images) ? body.images.slice(0, 12) : [];
-  if (!/^[A-Za-z0-9_-]{40,100}$/.test(token) || !children.length || children.some((child) => !child.name || !Number.isInteger(child.age) || child.age < 1 || child.age > 120 || !child.gender) || !/^\d{4}-\d{2}-\d{2}$/.test(eventDate) || !/^\d{2}:\d{2}$/.test(eventTime) || !city || !street || !houseNumber || !venueType || !contactName || contactPhone.length < 7 || images.length !== 1) { response.status(400).json({ message: "יש לצרף תמונה אחת בלבד ופרטים מלאים" }); return; }
+  const photoMode = body.photoMode === "shared" ? "shared" : "individual";
+  const hasOnePhotoPerChild = images.length === children.length && images.every((image, index) => Number(image?.childIndex) === index);
+  const hasSharedPhotos = images.length >= 1 && images.length <= 8 && images.every(image => image?.childIndex === null || image?.childIndex === undefined);
+  if (!/^[A-Za-z0-9_-]{40,100}$/.test(token) || !children.length || children.some((child) => !child.name || !Number.isInteger(child.age) || child.age < 1 || child.age > 120 || !child.gender) || !/^\d{4}-\d{2}-\d{2}$/.test(eventDate) || !/^\d{2}:\d{2}$/.test(eventTime) || !city || !street || !houseNumber || !venueType || !contactName || contactPhone.length < 7 || (photoMode === "individual" ? !hasOnePhotoPerChild : !hasSharedPhotos)) { response.status(400).json({ message: "יש לצרף תמונות בהתאם לבחירה ופרטים מלאים" }); return; }
   const accessRef = db.collection("invitationRequestAccess").doc(tokenHash);
   try {
     const access = await accessRef.get();
@@ -232,7 +235,7 @@ export const submitInvitationRequest = onRequest({ region: "me-west1", cors: tru
       const fresh = await transaction.get(accessRef), data = fresh.data();
       if (!fresh.exists || data?.active !== true || data?.used === true || data?.expiresAt?.toDate?.() <= new Date()) throw new Error("access");
       transaction.update(accessRef, { used: true, usedAt: FieldValue.serverTimestamp(), requestId: requestRef.id });
-      transaction.set(requestRef, { status: "pending", children, images: storedImages, eventDate, eventTime, style, city, street, houseNumber, venueType, venueDetails, contactName, contactPhone, createdAt: FieldValue.serverTimestamp() });
+      transaction.set(requestRef, { status: "pending", children, images: storedImages, photoMode, eventDate, eventTime, style, city, street, houseNumber, venueType, venueDetails, contactName, contactPhone, createdAt: FieldValue.serverTimestamp() });
     });
     response.status(201).json({ ok: true });
   } catch (error) {
