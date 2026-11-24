@@ -1,6 +1,8 @@
 import { initializeApp } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
 import { FieldValue, Timestamp, getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
+import { SecretManagerServiceClient } from "@google-cloud/secret-manager";
 import { defineSecret } from "firebase-functions/params";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onRequest } from "firebase-functions/v2/https";
@@ -11,6 +13,7 @@ initializeApp();
 const db = getFirestore();
 const AMIT_EMAIL = "amitmagician6@gmail.com";
 const SMTP_PASSWORD = defineSecret("AMIT_SMTP_PASSWORD");
+const secretManager = new SecretManagerServiceClient();
 
 const text = (value, fallback = "לא צוין") => String(value ?? "").trim() || fallback;
 const escapeHtml = (value) => text(value).replace(/[&<>"']/g, (character) => ({
@@ -20,6 +23,14 @@ const escapeHtml = (value) => text(value).replace(/[&<>"']/g, (character) => ({
   '"': "&quot;",
   "'": "&#039;"
 }[character]));
+
+const requireAdmin = async (request) => {
+  const match = String(request.headers.authorization || "").match(/^Bearer\s+(.+)$/i);
+  if (!match) throw new Error("unauthorized");
+  const decoded = await getAuth().verifyIdToken(match[1]);
+  if (String(decoded.email || "").toLowerCase() !== AMIT_EMAIL) throw new Error("forbidden");
+  return decoded;
+};
 
 const leadLines = (lead, leadId) => [
   `מספר פנייה: ${text(lead.requestNumber, leadId)}`,
@@ -248,5 +259,38 @@ export const submitInvitationRequest = onRequest({ region: "me-west1", cors: tru
   } catch (error) {
     console.error("submitInvitationRequest failed", error);
     response.status(400).json({ message: "לא הצלחנו לשלוח את הבקשה. נסו שוב." });
+  }
+});
+
+// Credentials arrive only over HTTPS, go straight to Secret Manager, and are
+// never returned, stored in Firestore, or included in logs.
+export const configureMorningSecrets = onRequest({
+  region: "me-west1",
+  cors: ["https://amitgic.co.il", "https://www.amitgic.co.il"]
+}, async (request, response) => {
+  if (request.method !== "POST") { response.status(405).json({ message: "Method not allowed" }); return; }
+  try {
+    const admin = await requireAdmin(request);
+    const apiKey = String(request.body?.apiKey || "").trim();
+    const apiSecret = String(request.body?.apiSecret || "").trim();
+    if (apiKey.length < 12 || apiKey.length > 512 || apiSecret.length < 12 || apiSecret.length > 512) {
+      response.status(400).json({ message: "פרטי Morning אינם מלאים" }); return;
+    }
+    const projectId = process.env.GCLOUD_PROJECT || "amit-mitrani-crm";
+    await Promise.all([
+      secretManager.addSecretVersion({ parent: `projects/${projectId}/secrets/MORNING_API_KEY`, payload: { data: Buffer.from(apiKey) } }),
+      secretManager.addSecretVersion({ parent: `projects/${projectId}/secrets/MORNING_API_SECRET`, payload: { data: Buffer.from(apiSecret) } })
+    ]);
+    await db.collection("integrationSettings").doc("morning").set({
+      configured: true,
+      configuredAt: FieldValue.serverTimestamp(),
+      configuredBy: String(admin.email || "")
+    }, { merge: true });
+    response.status(200).json({ ok: true });
+  } catch (error) {
+    const message = String(error?.message || "");
+    if (message === "unauthorized" || message === "forbidden") { response.status(403).json({ message: "גישה למנהל בלבד" }); return; }
+    console.error("configureMorningSecrets failed", { message: message.slice(0, 180) });
+    response.status(500).json({ message: "לא הצלחנו לשמור את החיבור. נסה שוב." });
   }
 });

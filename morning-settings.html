@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>חיבור Morning | עמית מיטרני</title><link rel="stylesheet" href="assets/ai-invitation-lab.css?v=4"><link rel="stylesheet" href="assets/morning-settings.css?v=1"></head>
+<body>
+  <header class="lab-header"><a class="brand" href="admin.html"><span>AM</span><strong>עמית מיטרני</strong><small>מערכת ניהול</small></a><a class="back" href="ai-invitation-lab.html">חזרה לבקשות</a></header>
+  <main class="lab-shell morning-shell">
+    <section class="lab-locked" id="locked"><p>בודק הרשאת מנהל…</p></section>
+    <section class="lab" id="settings" hidden>
+      <div class="lab-intro"><span>תשלום וחשבוניות</span><h1>חיבור ל‑Morning</h1><p>מדביקים כאן פעם אחת את שני הערכים החדשים שיצרת ב‑Morning. הם נשמרים בשרת בלבד ולא יוצגו שוב.</p></div>
+      <section class="lab-card morning-card">
+        <div class="morning-status" id="morning-status">בודק את מצב החיבור…</div>
+        <form id="morning-form" autocomplete="off">
+          <label>API Key<input name="apiKey" type="password" inputmode="text" autocomplete="off" required></label>
+          <label>API Secret<input name="apiSecret" type="password" inputmode="text" autocomplete="off" required></label>
+          <p class="morning-note">לא לשלוח את הערכים בהודעה או צילום מסך. אחרי השמירה השדות מתנקים ולא ניתן לצפות בהם.</p>
+          <button class="primary" type="submit">שמירת חיבור Morning</button>
+        </form>
+        <p class="form-result" id="form-result" role="status"></p>
+      </section>
+    </section>
+  </main>
+  <script type="module" src="assets/morning-settings.js?v=1"></script>
+</body>
+</html>
