@@ -6,7 +6,7 @@ import { SecretManagerServiceClient } from "@google-cloud/secret-manager";
 import { defineSecret } from "firebase-functions/params";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onRequest } from "firebase-functions/v2/https";
-import { createHash, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import nodemailer from "nodemailer";
 
 initializeApp();
@@ -292,5 +292,50 @@ export const configureMorningSecrets = onRequest({
     if (message === "unauthorized" || message === "forbidden") { response.status(403).json({ message: "גישה למנהל בלבד" }); return; }
     console.error("configureMorningSecrets failed", { message: message.slice(0, 180) });
     response.status(500).json({ message: "לא הצלחנו לשמור את החיבור. נסה שוב." });
+  }
+});
+
+export const createPaymentRequest = onRequest({ region: "me-west1", cors: ["https://amitgic.co.il", "https://www.amitgic.co.il"] }, async (request, response) => {
+  if (request.method !== "POST") { response.status(405).json({ message: "Method not allowed" }); return; }
+  try {
+    await requireAdmin(request);
+    const customerName = text(request.body?.customerName, "").slice(0, 80);
+    const customerPhone = text(request.body?.customerPhone, "").replace(/[^+\d\-() ]/g, "").slice(0, 30);
+    const description = text(request.body?.description, "תשלום עבור מופע").slice(0, 180);
+    const billingFlow = request.body?.billingFlow === "invoice_receipt_after_payment" ? "invoice_receipt_after_payment" : "invoice_then_receipt";
+    const amount = Math.round(Number(request.body?.amount) * 100);
+    if (!customerName || !Number.isInteger(amount) || amount < 100 || amount > 100000000) { response.status(400).json({ message: "יש למלא שם וסכום תקין" }); return; }
+    const methods = (await db.collection("integrationSettings").doc("paymentMethods").get()).data() || {};
+    const paymentMethods = {
+      bitPhone: text(methods.bitPhone, "").slice(0, 30), payboxUrl: text(methods.payboxUrl, "").slice(0, 500),
+      bankName: text(methods.bankName, "").slice(0, 80), bankBranch: text(methods.bankBranch, "").slice(0, 30),
+      bankAccount: text(methods.bankAccount, "").slice(0, 40), bankHolder: text(methods.bankHolder, "").slice(0, 80)
+    };
+    if (!paymentMethods.bitPhone && !paymentMethods.payboxUrl && !paymentMethods.bankAccount) { response.status(400).json({ message: "יש להגדיר קודם אמצעי תשלום במסך Morning" }); return; }
+    const rawToken = randomBytes(32).toString("base64url"), tokenHash = createHash("sha256").update(rawToken).digest("hex");
+    const ref = db.collection("paymentRequests").doc();
+    await ref.set({ customerName, customerPhone, description, amount, billingFlow, paymentMethods, tokenHash, status: "pending", createdAt: FieldValue.serverTimestamp() });
+    response.status(201).json({ ok: true, id: ref.id, url: `https://amitgic.co.il/payment-request.html?t=${encodeURIComponent(rawToken)}` });
+  } catch (error) {
+    const message = String(error?.message || "");
+    if (message === "unauthorized" || message === "forbidden") { response.status(403).json({ message: "גישה למנהל בלבד" }); return; }
+    console.error("createPaymentRequest failed", { message: message.slice(0, 180) });
+    response.status(500).json({ message: "לא הצלחנו להכין את דרישת התשלום." });
+  }
+});
+
+export const getPaymentRequest = onRequest({ region: "me-west1", cors: true }, async (request, response) => {
+  if (request.method !== "GET") { response.status(405).json({ message: "Method not allowed" }); return; }
+  const token = String(request.query.t || "");
+  if (!/^[A-Za-z0-9_-]{40,100}$/.test(token)) { response.status(404).json({ message: "הקישור אינו תקין" }); return; }
+  try {
+    const tokenHash = createHash("sha256").update(token).digest("hex");
+    const snapshot = await db.collection("paymentRequests").where("tokenHash", "==", tokenHash).limit(1).get();
+    if (snapshot.empty) { response.status(404).json({ message: "הקישור אינו תקין" }); return; }
+    const payment = snapshot.docs[0].data();
+    response.status(200).json({ description: text(payment.description), amount: Number(payment.amount || 0), status: text(payment.status), paymentMethods: payment.paymentMethods || {} });
+  } catch (error) {
+    console.error("getPaymentRequest failed", { message: String(error?.message || "").slice(0, 180) });
+    response.status(500).json({ message: "לא הצלחנו לטעון את דרישת התשלום." });
   }
 });

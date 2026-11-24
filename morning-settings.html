@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="he" dir="rtl">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>חיבור Morning | עמית מיטרני</title><link rel="stylesheet" href="assets/ai-invitation-lab.css?v=4"><link rel="stylesheet" href="assets/morning-settings.css?v=1"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>חיבור Morning | עמית מיטרני</title><link rel="stylesheet" href="assets/ai-invitation-lab.css?v=4"><link rel="stylesheet" href="assets/morning-settings.css?v=2"><link rel="stylesheet" href="assets/morning-settings-extra.css?v=1"></head>
 <body>
   <header class="lab-header"><a class="brand" href="admin.html"><span>AM</span><strong>עמית מיטרני</strong><small>מערכת ניהול</small></a><a class="back" href="ai-invitation-lab.html">חזרה לבקשות</a></header>
   <main class="lab-shell morning-shell">
@@ -17,8 +17,31 @@
         </form>
         <p class="form-result" id="form-result" role="status"></p>
       </section>
+      <section class="lab-card morning-card payment-method-card">
+        <div><span class="eyebrow">אפשרויות תשלום ללקוחות</span><h2>Bit ו‑PayBox</h2><p class="morning-note">הפרטים האלה יופיעו רק בדרישות תשלום חדשות שתבחר לשלוח. הם לא משנים הזמנות קיימות.</p></div>
+        <form id="payment-methods-form" autocomplete="off">
+          <label>מספר טלפון לקבלת Bit<input name="bitPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="לדוגמה: 050-1234567"></label>
+          <label>קישור PayBox לקבלת תשלום<input name="payboxUrl" type="url" inputmode="url" autocomplete="url" placeholder="מדביקים כאן את הקישור מ‑PayBox"></label>
+          <fieldset class="bank-details"><legend>העברה בנקאית (לא חובה)</legend><label>שם הבנק<input name="bankName" type="text" autocomplete="off" placeholder="לדוגמה: בנק הפועלים"></label><div class="bank-grid"><label>סניף<input name="bankBranch" type="text" inputmode="numeric" autocomplete="off"></label><label>מספר חשבון<input name="bankAccount" type="text" inputmode="numeric" autocomplete="off"></label></div><label>שם בעל החשבון<input name="bankHolder" type="text" autocomplete="name"></label></fieldset>
+          <button class="primary" type="submit">שמירת אמצעי תשלום</button>
+        </form>
+        <p class="form-result" id="payment-methods-result" role="status"></p>
+      </section>
+      <section class="lab-card morning-card payment-request-card">
+        <div><span class="eyebrow">בסיום מופע</span><h2>שליחת דרישת תשלום</h2><p class="morning-note">מייצר קישור אישי ללקוחה. רק היא רואה את הסכום ואת פרטי התשלום שבחרת.</p></div>
+        <form id="payment-request-form" autocomplete="off">
+          <label>שם הלקוחה / הלקוח<input name="customerName" type="text" autocomplete="name" required></label>
+          <label>טלפון ל‑WhatsApp (לא חובה)<input name="customerPhone" type="tel" inputmode="tel" autocomplete="tel"></label>
+          <label>סכום לתשלום<input name="amount" type="number" min="1" step="0.01" inputmode="decimal" placeholder="לדוגמה: 1500" required></label>
+          <label>עבור מה התשלום<input name="description" type="text" value="תשלום עבור מופע" maxlength="180" required></label>
+          <label>סוג המסמך<select name="billingFlow"><option value="invoice_then_receipt">חשבונית עכשיו, קבלה לאחר תשלום</option><option value="invoice_receipt_after_payment">חשבונית/קבלה לאחר תשלום</option></select></label>
+          <button class="primary" type="submit">יצירת קישור לתשלום</button>
+        </form>
+        <div class="payment-link-result" id="payment-link-result" hidden></div>
+        <p class="form-result" id="payment-request-result" role="status"></p>
+      </section>
     </section>
   </main>
-  <script type="module" src="assets/morning-settings.js?v=1"></script>
+  <script type="module" src="assets/morning-settings.js?v=2"></script>
 </body>
 </html>
