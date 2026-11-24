@@ -215,7 +215,8 @@ export const submitInvitationRequest = onRequest({ region: "me-west1", cors: tru
   const photoMode = body.photoMode === "shared" ? "shared" : "individual";
   const hasOnePhotoPerChild = images.length === children.length && images.every((image, index) => Number(image?.childIndex) === index);
   const hasSharedPhotos = images.length >= 1 && images.length <= 8 && images.every(image => image?.childIndex === null || image?.childIndex === undefined);
-  if (!/^[A-Za-z0-9_-]{40,100}$/.test(token) || !children.length || children.some((child) => !child.name || !Number.isInteger(child.age) || child.age < 1 || child.age > 120 || !child.gender) || !/^\d{4}-\d{2}-\d{2}$/.test(eventDate) || !/^\d{2}:\d{2}$/.test(eventTime) || !city || !street || !houseNumber || !venueType || !contactName || contactPhone.length < 7 || (photoMode === "individual" ? !hasOnePhotoPerChild : !hasSharedPhotos)) { response.status(400).json({ message: "יש לצרף תמונות בהתאם לבחירה ופרטים מלאים" }); return; }
+  const originalPayloadSize = images.reduce((total, image) => total + String(image?.original?.data || "").length, 0);
+  if (!/^[A-Za-z0-9_-]{40,100}$/.test(token) || !children.length || children.some((child) => !child.name || !Number.isInteger(child.age) || child.age < 1 || child.age > 120 || !child.gender) || !/^\d{4}-\d{2}-\d{2}$/.test(eventDate) || !/^\d{2}:\d{2}$/.test(eventTime) || !city || !street || !houseNumber || !venueType || !contactName || contactPhone.length < 7 || originalPayloadSize > 25200000 || (photoMode === "individual" ? !hasOnePhotoPerChild : !hasSharedPhotos)) { response.status(400).json({ message: "יש לצרף תמונות בהתאם לבחירה ופרטים מלאים" }); return; }
   const accessRef = db.collection("invitationRequestAccess").doc(tokenHash);
   try {
     const access = await accessRef.get();
@@ -229,8 +230,13 @@ export const submitInvitationRequest = onRequest({ region: "me-west1", cors: tru
       if (!/^image\/(jpeg|png|webp|heic|heif)$/.test(contentType) || !/^[A-Za-z0-9+/=]+$/.test(encoded) || encoded.length > imageLimit) throw new Error("image");
       const extension = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : contentType === "image/heic" ? "heic" : contentType === "image/heif" ? "heif" : "jpg";
       const path = `invitation-request-media/${requestRef.id}/${index}.${extension}`;
+      const original = image.original || {}, originalData = String(original.data || ""), originalContentType = String(original.contentType || ""), originalName = text(original.name, image.name || "תמונה").slice(0, 100);
+      const originalExtension = originalContentType === "image/png" ? "png" : originalContentType === "image/webp" ? "webp" : originalContentType === "image/heic" ? "heic" : originalContentType === "image/heif" ? "heif" : "jpg";
+      if (!/^image\/(jpeg|png|webp|heic|heif)$/.test(originalContentType) || !/^[A-Za-z0-9+/=]+$/.test(originalData) || originalData.length > 14000000) throw new Error("original-image");
+      const originalPath = `invitation-request-media/${requestRef.id}/original-${index}.${originalExtension}`;
       await getStorage().bucket().file(path).save(Buffer.from(encoded, "base64"), { metadata: { contentType } });
-      storedImages.push({ path, childIndex, contentType, name: text(image.name, "תמונה").slice(0, 100) });
+      await getStorage().bucket().file(originalPath).save(Buffer.from(originalData, "base64"), { metadata: { contentType: originalContentType } });
+      storedImages.push({ path, childIndex, contentType, name: text(image.name, "תמונה").slice(0, 100), originalPath, originalContentType, originalName });
     }
     await db.runTransaction(async transaction => {
       const fresh = await transaction.get(accessRef), data = fresh.data();
