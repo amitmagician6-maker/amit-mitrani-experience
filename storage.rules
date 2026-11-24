@@ -15,5 +15,9 @@ service firebase.storage {
         && request.resource.contentType.matches('(image|video)/.*');
       allow delete: if isAdmin();
     }
+
+    match /invitation-request-media/{allPaths=**} {
+      allow read, write: if isAdmin();
+    }
   }
 }

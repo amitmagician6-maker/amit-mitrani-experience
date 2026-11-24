@@ -121,7 +121,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .quick-form input { min-width: 0; flex: 1; }
 
 .admin-tabs { display: flex; gap: 8px; margin-bottom: 18px; padding: 5px; width: fit-content; border: 1px solid var(--line); border-radius: 14px; background: #0e0c15; }
-.admin-tab { min-height: 42px; padding: 0 18px; border: 0; border-radius: 10px; color: var(--muted); background: transparent; cursor: pointer; font-weight: 700; }
+.admin-tab { min-height: 42px; padding: 0 18px; border: 0; border-radius: 10px; color: var(--muted); background: transparent; cursor: pointer; font-weight: 700; text-decoration: none; }
 .admin-tab:hover, .admin-tab:focus-visible { color: var(--text); outline: 2px solid var(--gold); outline-offset: 1px; }
 .admin-tab.active { color: #17110a; background: var(--gold); }
 .eyebrow { display: block; margin-bottom: 6px; color: var(--gold); font-size: 12px; font-weight: 800; letter-spacing: .04em; }

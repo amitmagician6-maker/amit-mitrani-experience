@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase-admin/app";
 import { FieldValue, Timestamp, getFirestore } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
 import { defineSecret } from "firebase-functions/params";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onRequest } from "firebase-functions/v2/https";
@@ -197,5 +198,45 @@ export const invitationShare = onRequest({ region: "me-west1", cors: false }, as
   } catch (error) {
     console.error("invitationShare failed", error);
     response.status(500).send("Unable to load invitation");
+  }
+});
+
+export const submitInvitationRequest = onRequest({ region: "me-west1", cors: true }, async (request, response) => {
+  if (request.method !== "POST") { response.status(405).json({ message: "Method not allowed" }); return; }
+  const body = request.body || {};
+  const token = String(body.access || "");
+  const tokenHash = createHash("sha256").update(token.toUpperCase()).digest("hex");
+  const children = Array.isArray(body.children) ? body.children.slice(0, 4).map((child) => ({
+    name: text(child?.name, "").slice(0, 40), age: Number(child?.age), gender: ["male", "female"].includes(child?.gender) ? child.gender : ""
+  })) : [];
+  const eventDate = text(body.eventDate, ""), eventTime = text(body.eventTime, ""), style = text(body.style, "").slice(0, 80);
+  const city = text(body.city, "").slice(0, 60), street = text(body.street, "").slice(0, 80), houseNumber = text(body.houseNumber, "").slice(0, 12), venueType = text(body.venueType, "").slice(0, 30), venueDetails = text(body.venueDetails, "").slice(0, 120), contactName = text(body.contactName, "").slice(0, 50), contactPhone = text(body.contactPhone, "").replace(/[^+\d\-() ]/g, "").slice(0, 30);
+  const images = Array.isArray(body.images) ? body.images.slice(0, 12) : [];
+  if (!/^[A-Za-z0-9_-]{40,100}$/.test(token) || !children.length || children.some((child) => !child.name || !Number.isInteger(child.age) || child.age < 1 || child.age > 120 || !child.gender) || !/^\d{4}-\d{2}-\d{2}$/.test(eventDate) || !/^\d{2}:\d{2}$/.test(eventTime) || !city || !street || !houseNumber || !venueType || !contactName || contactPhone.length < 7 || images.length < children.length || images.length > 12) { response.status(400).json({ message: "פרטים חסרים או לא תקינים" }); return; }
+  const accessRef = db.collection("invitationRequestAccess").doc(tokenHash);
+  try {
+    const access = await accessRef.get();
+    if (!access.exists || access.data()?.active !== true || access.data()?.used === true || access.data()?.expiresAt?.toDate?.() <= new Date()) { response.status(403).json({ message: "הקישור אינו תקין או שכבר נעשה בו שימוש" }); return; }
+    const requestRef = db.collection("invitationRequests").doc();
+    const storedImages = [];
+    for (let index = 0; index < images.length; index += 1) {
+      const image = images[index] || {}, encoded = String(image.data || ""), contentType = String(image.contentType || "");
+      const childIndex = Number.isInteger(image.childIndex) && image.childIndex >= 0 && image.childIndex < children.length ? image.childIndex : null;
+      if (!/^image\/(jpeg|png|webp)$/.test(contentType) || !/^[A-Za-z0-9+/=]+$/.test(encoded) || encoded.length > 420000) throw new Error("image");
+      const extension = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
+      const path = `invitation-request-media/${requestRef.id}/${index}.${extension}`;
+      await getStorage().bucket().file(path).save(Buffer.from(encoded, "base64"), { metadata: { contentType } });
+      storedImages.push({ path, childIndex, name: text(image.name, "תמונה").slice(0, 100) });
+    }
+    await db.runTransaction(async transaction => {
+      const fresh = await transaction.get(accessRef), data = fresh.data();
+      if (!fresh.exists || data?.active !== true || data?.used === true || data?.expiresAt?.toDate?.() <= new Date()) throw new Error("access");
+      transaction.update(accessRef, { used: true, usedAt: FieldValue.serverTimestamp(), requestId: requestRef.id });
+      transaction.set(requestRef, { status: "pending", children, images: storedImages, eventDate, eventTime, style, city, street, houseNumber, venueType, venueDetails, contactName, contactPhone, createdAt: FieldValue.serverTimestamp() });
+    });
+    response.status(201).json({ ok: true });
+  } catch (error) {
+    console.error("submitInvitationRequest failed", error);
+    response.status(400).json({ message: "לא הצלחנו לשלוח את הבקשה. נסו שוב." });
   }
 });
