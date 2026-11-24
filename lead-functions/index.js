@@ -307,11 +307,11 @@ export const createPaymentRequest = onRequest({ region: "me-west1", cors: ["http
     if (!customerName || !Number.isInteger(amount) || amount < 100 || amount > 100000000) { response.status(400).json({ message: "יש למלא שם וסכום תקין" }); return; }
     const methods = (await db.collection("integrationSettings").doc("paymentMethods").get()).data() || {};
     const paymentMethods = {
-      bitPhone: text(methods.bitPhone, "").slice(0, 30), payboxUrl: text(methods.payboxUrl, "").slice(0, 500),
+      bitUrl: text(methods.bitUrl, "").slice(0, 500), bitPhone: text(methods.bitPhone, "").slice(0, 30), payboxUrl: text(methods.payboxUrl, "").slice(0, 500),
       bankName: text(methods.bankName, "").slice(0, 80), bankBranch: text(methods.bankBranch, "").slice(0, 30),
       bankAccount: text(methods.bankAccount, "").slice(0, 40), bankHolder: text(methods.bankHolder, "").slice(0, 80)
     };
-    if (!paymentMethods.bitPhone && !paymentMethods.payboxUrl && !paymentMethods.bankAccount) { response.status(400).json({ message: "יש להגדיר קודם אמצעי תשלום במסך Morning" }); return; }
+    if (!paymentMethods.bitUrl && !paymentMethods.bitPhone && !paymentMethods.payboxUrl && !paymentMethods.bankAccount) { response.status(400).json({ message: "יש להגדיר קודם אמצעי תשלום במסך Morning" }); return; }
     const rawToken = randomBytes(32).toString("base64url"), tokenHash = createHash("sha256").update(rawToken).digest("hex");
     const ref = db.collection("paymentRequests").doc();
     await ref.set({ customerName, customerPhone, description, amount, billingFlow, paymentMethods, tokenHash, status: "pending", createdAt: FieldValue.serverTimestamp() });

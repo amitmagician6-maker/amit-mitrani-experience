@@ -12,17 +12,18 @@ onAuthStateChanged(auth,user=>{
     status.textContent=snapshot.data()?.configured?"Morning מחובר. אפשר להחליף את פרטי החיבור כאן רק במקרה הצורך.":"Morning עדיין לא מחובר.";
     status.classList.toggle("connected",snapshot.data()?.configured===true);
   },()=>{status.textContent="המסך מוכן לחיבור Morning.";});
-  getDoc(doc(db,"integrationSettings","paymentMethods")).then(snapshot=>{const data=snapshot.data()||{};["bitPhone","payboxUrl","bankName","bankBranch","bankAccount","bankHolder"].forEach(key=>paymentForm[key].value=data[key]||"");}).catch(()=>{});
+  getDoc(doc(db,"integrationSettings","paymentMethods")).then(snapshot=>{const data=snapshot.data()||{};["bitUrl","bitPhone","payboxUrl","bankName","bankBranch","bankAccount","bankHolder"].forEach(key=>paymentForm[key].value=data[key]||"");}).catch(()=>{});
 });
 paymentForm.addEventListener("submit",async event=>{
   event.preventDefault();paymentResult.textContent="";
-  const button=paymentForm.querySelector("button"), data=new FormData(paymentForm), bitPhone=String(data.get("bitPhone")||"").trim(), payboxUrl=String(data.get("payboxUrl")||"").trim(), bankName=String(data.get("bankName")||"").trim(), bankBranch=String(data.get("bankBranch")||"").trim(), bankAccount=String(data.get("bankAccount")||"").trim(), bankHolder=String(data.get("bankHolder")||"").trim();
+  const button=paymentForm.querySelector("button"), data=new FormData(paymentForm), bitUrl=String(data.get("bitUrl")||"").trim(), bitPhone=String(data.get("bitPhone")||"").trim(), payboxUrl=String(data.get("payboxUrl")||"").trim(), bankName=String(data.get("bankName")||"").trim(), bankBranch=String(data.get("bankBranch")||"").trim(), bankAccount=String(data.get("bankAccount")||"").trim(), bankHolder=String(data.get("bankHolder")||"").trim();
   const bankValues=[bankName,bankBranch,bankAccount,bankHolder];
-  if(!bitPhone && !payboxUrl && !bankValues.some(Boolean)){paymentResult.textContent="יש למלא לפחות אמצעי תשלום אחד.";return;}
+  if(!bitUrl && !bitPhone && !payboxUrl && !bankValues.some(Boolean)){paymentResult.textContent="יש למלא לפחות אמצעי תשלום אחד.";return;}
+  if(bitUrl){try{const url=new URL(bitUrl);if(url.protocol!=="https:")throw new Error();}catch{paymentResult.textContent="קישור Bit צריך להתחיל ב‑https://";return;}}
   if(bankValues.some(Boolean)&&bankValues.some(value=>!value)){paymentResult.textContent="להעברה בנקאית יש למלא את כל פרטי החשבון.";return;}
   if(payboxUrl){try{const url=new URL(payboxUrl);if(url.protocol!=="https:")throw new Error();}catch{paymentResult.textContent="קישור PayBox צריך להתחיל ב‑https://";return;}}
   button.disabled=true;button.textContent="שומר…";
-  try{await setDoc(doc(db,"integrationSettings","paymentMethods"),{bitPhone,payboxUrl,bankName,bankBranch,bankAccount,bankHolder,updatedAt:serverTimestamp(),updatedBy:auth.currentUser.email},{merge:true});paymentResult.textContent="אמצעי התשלום נשמרו. עכשיו אפשר לבנות דרישת תשלום חדשה ללקוחה.";paymentResult.className="form-result success";}catch(error){paymentResult.textContent="לא הצלחנו לשמור. נסה שוב.";paymentResult.className="form-result error";}finally{button.disabled=false;button.textContent="שמירת אמצעי תשלום";}
+  try{await setDoc(doc(db,"integrationSettings","paymentMethods"),{bitUrl,bitPhone,payboxUrl,bankName,bankBranch,bankAccount,bankHolder,updatedAt:serverTimestamp(),updatedBy:auth.currentUser.email},{merge:true});paymentResult.textContent="אמצעי התשלום נשמרו. עכשיו אפשר לבנות דרישת תשלום חדשה ללקוחה.";paymentResult.className="form-result success";}catch(error){paymentResult.textContent="לא הצלחנו לשמור. נסה שוב.";paymentResult.className="form-result error";}finally{button.disabled=false;button.textContent="שמירת אמצעי תשלום";}
 });
 requestForm.addEventListener("submit",async event=>{
   event.preventDefault();requestResult.textContent="";linkResult.hidden=true;
