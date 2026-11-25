@@ -391,6 +391,7 @@ export const issuePaymentDocument = onRequest({
     const income = [{ description: text(payment.description, "תשלום עבור מופע"), quantity: 1, price: amount, currency: "ILS", vatType: 0 }];
     const client = { name: text(payment.customerName, "לקוח"), add: true };
     if (payment.customerPhone) { client.phone = String(payment.customerPhone); client.mobile = String(payment.customerPhone); }
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(payment.customerEmail || ""))) client.emails = [String(payment.customerEmail)];
     const paymentRow = paymentMethod === "bank" ? { date: todayIsrael(), type: 4, price: amount, currency: "ILS" } : { date: todayIsrael(), type: 10, appType: paymentMethod === "bit" ? 1 : 3, accountId: paymentMethod === "bit" ? "Bit" : "PayBox", price: amount, currency: "ILS" };
     const flow = payment.billingFlow || "invoice_then_receipt";
     let documentPayload, documentField, label;
@@ -442,5 +443,23 @@ export const deletePaymentRequest = onRequest({ region: "me-west1", cors: ["http
     if (message === "missing-payment") { response.status(404).json({ message: "דרישת התשלום כבר נמחקה" }); return; }
     console.error("deletePaymentRequest failed", { message: message.slice(0, 180) });
     response.status(500).json({ message: "לא הצלחנו למחוק את דרישת התשלום." });
+  }
+});
+
+export const savePaymentInvoiceEmail = onRequest({ region: "me-west1", cors: true }, async (request, response) => {
+  if (request.method !== "POST") { response.status(405).json({ message: "Method not allowed" }); return; }
+  const token = String(request.body?.t || ""), email = String(request.body?.email || "").trim().toLowerCase();
+  if (!/^[A-Za-z0-9_-]{40,100}$/.test(token) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 160) { response.status(400).json({ message: "יש להזין כתובת מייל תקינה" }); return; }
+  try {
+    const tokenHash = createHash("sha256").update(token).digest("hex");
+    const snapshot = await db.collection("paymentRequests").where("tokenHash", "==", tokenHash).limit(1).get();
+    if (snapshot.empty) { response.status(404).json({ message: "הקישור אינו תקין" }); return; }
+    const ref = snapshot.docs[0].ref, payment = snapshot.docs[0].data();
+    if (payment.paymentDocument?.id) { response.status(409).json({ message: "המסמך כבר הופק" }); return; }
+    await ref.update({ customerEmail: email, emailRequestedAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+    response.status(200).json({ ok: true });
+  } catch (error) {
+    console.error("savePaymentInvoiceEmail failed", { message: String(error?.message || "").slice(0, 180) });
+    response.status(500).json({ message: "לא הצלחנו לשמור את כתובת המייל" });
   }
 });
