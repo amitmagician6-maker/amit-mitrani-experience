@@ -359,7 +359,7 @@ export const getPaymentRequest = onRequest({ region: "me-west1", cors: true }, a
     const snapshot = await db.collection("paymentRequests").where("tokenHash", "==", tokenHash).limit(1).get();
     if (snapshot.empty) { response.status(404).json({ message: "הקישור אינו תקין" }); return; }
     const payment = snapshot.docs[0].data();
-    response.status(200).json({ description: text(payment.description), amount: Number(payment.amount || 0), status: text(payment.status), paymentMethods: payment.paymentMethods || {} });
+    response.status(200).json({ description: text(payment.description), amount: Number(payment.amount || 0), status: text(payment.status), hasCustomerEmail: Boolean(payment.customerEmail), paymentMethods: payment.paymentMethods || {} });
   } catch (error) {
     console.error("getPaymentRequest failed", { message: String(error?.message || "").slice(0, 180) });
     response.status(500).json({ message: "לא הצלחנו לטעון את דרישת התשלום." });
@@ -388,7 +388,9 @@ export const issuePaymentDocument = onRequest({
       return current;
     });
     const amount = Number(payment.amount || 0) / 100;
-    const income = [{ description: text(payment.description, "תשלום עבור מופע"), quantity: 1, price: amount, currency: "ILS", vatType: 0 }];
+    // The payment link amount is always the final amount the client pays, including VAT.
+    // Morning's income-row vatType=1 means the line price already includes VAT.
+    const income = [{ description: text(payment.description, "תשלום עבור מופע"), quantity: 1, price: amount, currency: "ILS", vatType: 1 }];
     const client = { name: text(payment.customerName, "לקוח"), add: true };
     if (payment.customerPhone) { client.phone = String(payment.customerPhone); client.mobile = String(payment.customerPhone); }
     if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(payment.customerEmail || ""))) client.emails = [String(payment.customerEmail)];
