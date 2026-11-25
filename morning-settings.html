@@ -35,7 +35,7 @@
           <label>טלפון ל‑WhatsApp (לא חובה)<input name="customerPhone" type="tel" inputmode="tel" autocomplete="tel"></label>
           <label>סכום לתשלום<input name="amount" type="number" min="1" step="0.01" inputmode="decimal" placeholder="לדוגמה: 1500" required></label>
           <label>עבור מה התשלום<input name="description" type="text" value="תשלום עבור מופע" maxlength="180" required></label>
-          <label>סוג המסמך<select name="billingFlow"><option value="invoice_then_receipt">חשבונית עכשיו, קבלה לאחר תשלום</option><option value="invoice_receipt_after_payment">חשבונית/קבלה לאחר תשלום</option></select></label>
+          <label>סוג המסמך<select name="billingFlow"><option value="invoice_receipt_after_payment">לקוח פרטי — חשבונית/קבלה אחרי תשלום</option><option value="invoice_then_receipt">חברה בתנאי שוטף — חשבונית עסקה עכשיו, קבלה לאחר תשלום</option></select></label>
           <button class="primary" type="submit">יצירת קישור לתשלום</button>
         </form>
         <div class="payment-link-result" id="payment-link-result" hidden></div>

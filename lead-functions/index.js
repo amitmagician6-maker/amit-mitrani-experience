@@ -328,7 +328,7 @@ export const createPaymentRequest = onRequest({ region: "me-west1", cors: ["http
     const customerName = text(request.body?.customerName, "").slice(0, 80);
     const customerPhone = text(request.body?.customerPhone, "").replace(/[^+\d\-() ]/g, "").slice(0, 30);
     const description = text(request.body?.description, "תשלום עבור מופע").slice(0, 180);
-    const billingFlow = request.body?.billingFlow === "invoice_receipt_after_payment" ? "invoice_receipt_after_payment" : "invoice_then_receipt";
+    const billingFlow = request.body?.billingFlow === "invoice_then_receipt" ? "invoice_then_receipt" : "invoice_receipt_after_payment";
     const amount = Math.round(Number(request.body?.amount) * 100);
     if (!customerName || !Number.isInteger(amount) || amount < 100 || amount > 100000000) { response.status(400).json({ message: "יש למלא שם וסכום תקין" }); return; }
     const methods = { ...DEFAULT_PAYMENT_LINKS, ...((await db.collection("integrationSettings").doc("paymentMethods").get()).data() || {}) };
