@@ -13,6 +13,8 @@ initializeApp();
 const db = getFirestore();
 const AMIT_EMAIL = "amitmagician6@gmail.com";
 const SMTP_PASSWORD = defineSecret("AMIT_SMTP_PASSWORD");
+const MORNING_API_KEY = defineSecret("MORNING_API_KEY");
+const MORNING_API_SECRET = defineSecret("MORNING_API_SECRET");
 const secretManager = new SecretManagerServiceClient();
 const DEFAULT_PAYMENT_LINKS = {
   payboxUrl: "https://links.payboxapp.com/eu0yWwH4WUb",
@@ -34,6 +36,26 @@ const requireAdmin = async (request) => {
   const decoded = await getAuth().verifyIdToken(match[1]);
   if (String(decoded.email || "").toLowerCase() !== AMIT_EMAIL) throw new Error("forbidden");
   return decoded;
+};
+
+const todayIsrael = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+const morningAccessToken = async () => {
+  const tokenResponse = await fetch("https://api.greeninvoice.co.il/api/v1/idp/v1/oauth/token", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ grant_type: "client_credentials", client_id: MORNING_API_KEY.value(), client_secret: MORNING_API_SECRET.value() })
+  });
+  const token = await tokenResponse.json().catch(() => ({}));
+  if (!tokenResponse.ok || !token.accessToken) throw new Error("morning-auth");
+  return token.accessToken;
+};
+const createMorningDocument = async (payload) => {
+  const accessToken = await morningAccessToken();
+  const result = await fetch("https://api.greeninvoice.co.il/api/v1/documents", {
+    method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` }, body: JSON.stringify(payload)
+  });
+  const document = await result.json().catch(() => ({}));
+  if (!result.ok || !document.id) throw new Error("morning-document");
+  return document;
 };
 
 const leadLines = (lead, leadId) => [
@@ -341,5 +363,59 @@ export const getPaymentRequest = onRequest({ region: "me-west1", cors: true }, a
   } catch (error) {
     console.error("getPaymentRequest failed", { message: String(error?.message || "").slice(0, 180) });
     response.status(500).json({ message: "לא הצלחנו לטעון את דרישת התשלום." });
+  }
+});
+
+export const issuePaymentDocument = onRequest({
+  region: "me-west1",
+  cors: ["https://amitgic.co.il", "https://www.amitgic.co.il"],
+  secrets: [MORNING_API_KEY, MORNING_API_SECRET]
+}, async (request, response) => {
+  if (request.method !== "POST") { response.status(405).json({ message: "Method not allowed" }); return; }
+  let paymentRef, attemptId;
+  try {
+    await requireAdmin(request);
+    const paymentId = String(request.body?.paymentId || ""), action = String(request.body?.action || ""), paymentMethod = String(request.body?.paymentMethod || "");
+    if (!/^[A-Za-z0-9_-]{10,80}$/.test(paymentId) || !["invoice", "payment-document"].includes(action) || (action === "payment-document" && !["paybox", "bit", "bank"].includes(paymentMethod)) || request.body?.confirmed !== true) { response.status(400).json({ message: "פרטי אישור התשלום אינם תקינים" }); return; }
+    paymentRef = db.collection("paymentRequests").doc(paymentId); attemptId = randomBytes(16).toString("hex");
+    const payment = await db.runTransaction(async transaction => {
+      const snapshot = await transaction.get(paymentRef);
+      if (!snapshot.exists) throw new Error("missing-payment");
+      const current = snapshot.data(), flow = current.billingFlow || "invoice_then_receipt";
+      const hasInvoice = Boolean(current.invoiceDocument?.id), hasPaymentDocument = Boolean(current.paymentDocument?.id);
+      if (current.documentLock || (action === "invoice" && (flow !== "invoice_then_receipt" || hasInvoice)) || (action === "payment-document" && (hasPaymentDocument || (flow === "invoice_then_receipt" && !hasInvoice)))) throw new Error("already-issued");
+      transaction.update(paymentRef, { documentLock: attemptId, documentLockAt: FieldValue.serverTimestamp() });
+      return current;
+    });
+    const amount = Number(payment.amount || 0) / 100;
+    const income = [{ description: text(payment.description, "תשלום עבור מופע"), quantity: 1, price: amount, currency: "ILS", vatType: 0 }];
+    const client = { name: text(payment.customerName, "לקוח"), add: true };
+    if (payment.customerPhone) { client.phone = String(payment.customerPhone); client.mobile = String(payment.customerPhone); }
+    const paymentRow = paymentMethod === "bank" ? { date: todayIsrael(), type: 4, price: amount, currency: "ILS" } : { date: todayIsrael(), type: 10, appType: paymentMethod === "bit" ? 1 : 3, accountId: paymentMethod === "bit" ? "Bit" : "PayBox", price: amount, currency: "ILS" };
+    const flow = payment.billingFlow || "invoice_then_receipt";
+    let documentPayload, documentField, label;
+    if (action === "invoice") {
+      documentPayload = { type: 300, lang: "he", currency: "ILS", vatType: 0, description: text(payment.description, "תשלום עבור מופע"), client, income };
+      documentField = "invoiceDocument"; label = "חשבונית עסקה";
+    } else if (flow === "invoice_then_receipt") {
+      documentPayload = { type: 400, lang: "he", currency: "ILS", vatType: 0, description: text(payment.description, "תשלום עבור מופע"), client, income, payment: [paymentRow], linkedDocumentIds: [payment.invoiceDocument.id], linkType: "link" };
+      documentField = "paymentDocument"; label = "קבלה";
+    } else {
+      documentPayload = { type: 320, lang: "he", currency: "ILS", vatType: 0, description: text(payment.description, "תשלום עבור מופע"), client, income, payment: [paymentRow] };
+      documentField = "paymentDocument"; label = "חשבונית מס/קבלה";
+    }
+    const document = await createMorningDocument(documentPayload);
+    const documentData = { id: document.id, number: Number(document.number || 0), url: String(document.url?.he || document.url?.origin || ""), type: Number(document.type || documentPayload.type), issuedAt: FieldValue.serverTimestamp(), paymentMethod: action === "invoice" ? "" : paymentMethod };
+    await paymentRef.update({ [documentField]: documentData, documentLock: FieldValue.delete(), documentLockAt: FieldValue.delete(), status: action === "invoice" ? "awaiting-payment" : "paid", updatedAt: FieldValue.serverTimestamp() });
+    response.status(201).json({ ok: true, label, number: documentData.number, url: documentData.url });
+  } catch (error) {
+    if (paymentRef && attemptId) await paymentRef.update({ documentLock: FieldValue.delete(), documentLockAt: FieldValue.delete(), documentError: String(error?.message || "").slice(0, 80), updatedAt: FieldValue.serverTimestamp() }).catch(() => {});
+    const message = String(error?.message || "");
+    if (message === "unauthorized" || message === "forbidden") { response.status(403).json({ message: "גישה למנהל בלבד" }); return; }
+    if (message === "already-issued") { response.status(409).json({ message: "מסמך כבר נוצר או שנמצא בתהליך יצירה" }); return; }
+    if (message === "morning-auth") { response.status(502).json({ message: "לא הצלחנו להתחבר ל‑Morning. בדוק את פרטי החיבור." }); return; }
+    if (message === "morning-document") { response.status(502).json({ message: "Morning לא הצליחה ליצור את המסמך. לא נוצר מסמך חדש." }); return; }
+    console.error("issuePaymentDocument failed", { message: message.slice(0, 180) });
+    response.status(500).json({ message: "לא הצלחנו ליצור את המסמך." });
   }
 });
