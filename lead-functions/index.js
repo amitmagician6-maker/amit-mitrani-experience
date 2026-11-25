@@ -419,3 +419,28 @@ export const issuePaymentDocument = onRequest({
     response.status(500).json({ message: "לא הצלחנו ליצור את המסמך." });
   }
 });
+
+export const deletePaymentRequest = onRequest({ region: "me-west1", cors: ["https://amitgic.co.il", "https://www.amitgic.co.il"] }, async (request, response) => {
+  if (request.method !== "POST") { response.status(405).json({ message: "Method not allowed" }); return; }
+  try {
+    await requireAdmin(request);
+    const paymentId = String(request.body?.paymentId || "");
+    if (!/^[A-Za-z0-9_-]{10,80}$/.test(paymentId)) { response.status(400).json({ message: "דרישת התשלום אינה תקינה" }); return; }
+    const paymentRef = db.collection("paymentRequests").doc(paymentId);
+    await db.runTransaction(async transaction => {
+      const snapshot = await transaction.get(paymentRef);
+      if (!snapshot.exists) throw new Error("missing-payment");
+      const payment = snapshot.data();
+      if (payment.invoiceDocument?.id || payment.paymentDocument?.id || payment.documentLock) throw new Error("document-exists");
+      transaction.delete(paymentRef);
+    });
+    response.status(200).json({ ok: true });
+  } catch (error) {
+    const message = String(error?.message || "");
+    if (message === "unauthorized" || message === "forbidden") { response.status(403).json({ message: "גישה למנהל בלבד" }); return; }
+    if (message === "document-exists") { response.status(409).json({ message: "אי אפשר למחוק דרישה שכבר הופק עבורה מסמך. צריך לטפל במסמך בתוך Morning." }); return; }
+    if (message === "missing-payment") { response.status(404).json({ message: "דרישת התשלום כבר נמחקה" }); return; }
+    console.error("deletePaymentRequest failed", { message: message.slice(0, 180) });
+    response.status(500).json({ message: "לא הצלחנו למחוק את דרישת התשלום." });
+  }
+});
