@@ -14,6 +14,10 @@ const db = getFirestore();
 const AMIT_EMAIL = "amitmagician6@gmail.com";
 const SMTP_PASSWORD = defineSecret("AMIT_SMTP_PASSWORD");
 const secretManager = new SecretManagerServiceClient();
+const DEFAULT_PAYMENT_LINKS = {
+  payboxUrl: "https://links.payboxapp.com/eu0yWwH4WUb",
+  bitUrl: "https://www.bitpay.co.il/app/me/72D7DFAB-5910-CEE5-7C10-2C94FF5BB45A6F9B"
+};
 
 const text = (value, fallback = "לא צוין") => String(value ?? "").trim() || fallback;
 const escapeHtml = (value) => text(value).replace(/[&<>"']/g, (character) => ({
@@ -305,7 +309,7 @@ export const createPaymentRequest = onRequest({ region: "me-west1", cors: ["http
     const billingFlow = request.body?.billingFlow === "invoice_receipt_after_payment" ? "invoice_receipt_after_payment" : "invoice_then_receipt";
     const amount = Math.round(Number(request.body?.amount) * 100);
     if (!customerName || !Number.isInteger(amount) || amount < 100 || amount > 100000000) { response.status(400).json({ message: "יש למלא שם וסכום תקין" }); return; }
-    const methods = (await db.collection("integrationSettings").doc("paymentMethods").get()).data() || {};
+    const methods = { ...DEFAULT_PAYMENT_LINKS, ...((await db.collection("integrationSettings").doc("paymentMethods").get()).data() || {}) };
     const paymentMethods = {
       bitUrl: text(methods.bitUrl, "").slice(0, 500), bitPhone: text(methods.bitPhone, "").slice(0, 30), payboxUrl: text(methods.payboxUrl, "").slice(0, 500),
       bankName: text(methods.bankName, "").slice(0, 80), bankBranch: text(methods.bankBranch, "").slice(0, 30),
